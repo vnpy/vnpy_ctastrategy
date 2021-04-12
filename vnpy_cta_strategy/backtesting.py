@@ -606,9 +606,50 @@ class BacktestingEngine:
         ctx = multiprocessing.get_context("spawn")
         pool = ctx.Pool(multiprocessing.cpu_count())
 
+        # Preload historical data to shared multiprocessing manager.
+        manager = multiprocessing.Manager()
+        namespace = manager.Namespace()
+
+        if self.mode == BacktestingMode.BAR:
+            db_bars = load_bar_data(
+                self.symbol,
+                self.exchange,
+                self.interval,
+                self.start,
+                self.end
+            )
+
+            data = []
+            for db_bar in db_bars:
+                bar = BarData(
+                    db_bar.gateway_name,
+                    db_bar.symbol,
+                    db_bar.exchange,
+                    db_bar.datetime,
+                    db_bar.interval,
+                    db_bar.volume,
+                    db_bar.open_interest,
+                    db_bar.open_price,
+                    db_bar.high_price,
+                    db_bar.low_price,
+                    db_bar.close_price
+                )
+                data.append(bar)
+        else:
+            data = load_tick_data(
+                self.symbol,
+                self.exchange,
+                self.start,
+                self.end
+            )
+
+        namespace.data = data
+
+        # Use process pool to run backtesting job
         results = []
         for setting in settings:
-            result = (pool.apply_async(optimize, (
+            result = (pool.apply_async(new_optimize, (
+                namespace,
                 target_name,
                 self.strategy_class,
                 setting,
@@ -1279,6 +1320,52 @@ def optimize(
 
     engine.add_strategy(strategy_class, setting)
     engine.load_data()
+    engine.run_backtesting()
+    engine.calculate_result()
+    statistics = engine.calculate_statistics(output=False)
+
+    target_value = statistics[target_name]
+    return (str(setting), target_value, statistics)
+
+
+def new_optimize(
+    namespace: object,
+    target_name: str,
+    strategy_class: CtaTemplate,
+    setting: dict,
+    vt_symbol: str,
+    interval: Interval,
+    start: datetime,
+    rate: float,
+    slippage: float,
+    size: float,
+    pricetick: float,
+    capital: int,
+    end: datetime,
+    mode: BacktestingMode,
+    inverse: bool
+):
+    """
+    Function for running in multiprocessing.pool
+    """
+    engine = BacktestingEngine()
+
+    engine.set_parameters(
+        vt_symbol=vt_symbol,
+        interval=interval,
+        start=start,
+        rate=rate,
+        slippage=slippage,
+        size=size,
+        pricetick=pricetick,
+        capital=capital,
+        end=end,
+        mode=mode,
+        inverse=inverse
+    )
+
+    engine.add_strategy(strategy_class, setting)
+    engine.history_data = namespace.data
     engine.run_backtesting()
     engine.calculate_result()
     statistics = engine.calculate_statistics(output=False)
