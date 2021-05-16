@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from tzlocal import get_localzone
+from glob import glob
 
 from vnpy.event import Event, EventEngine
 from vnpy.trader.engine import BaseEngine, MainEngine
@@ -790,8 +791,7 @@ class CtaEngine(BaseEngine):
         Load strategy class from source code.
         """
         path1 = Path(__file__).parent.joinpath("strategies")
-        self.load_strategy_class_from_folder(
-            path1, "vnpy.app.cta_strategy.strategies")
+        self.load_strategy_class_from_folder(path1, "vnpy_ctastrategy.strategies")
 
         path2 = Path.cwd().joinpath("strategies")
         self.load_strategy_class_from_folder(path2, "strategies")
@@ -800,11 +800,12 @@ class CtaEngine(BaseEngine):
         """
         Load strategy class from certain folder.
         """
-        for dirpath, dirnames, filenames in os.walk(str(path)):
-            for filename in filenames:
-                if filename.split(".")[-1] in ("py", "pyd", "so"):
-                    strategy_module_name = ".".join([module_name, filename.split(".")[0]])
-                    self.load_strategy_class_from_module(strategy_module_name)
+        for suffix in ["py", "pyd", "so"]:
+            pathname: str = str(path) + f"\\*.{suffix}"
+            for filepath in glob(pathname):
+                filename: str = Path(filepath).stem
+                name: str = f"{module_name}.{filename}"
+                self.load_strategy_class_from_module(name)
 
     def load_strategy_class_from_module(self, module_name: str):
         """
