@@ -813,6 +813,9 @@ class CtaEngine(BaseEngine):
         try:
             module = importlib.import_module(module_name)
 
+            # 重载模块，确保如果策略文件中有任何修改，能够立即生效。
+            importlib.reload(module)
+
             for name in dir(module):
                 value = getattr(module, name)
                 if (isinstance(value, type) and issubclass(value, CtaTemplate) and value is not CtaTemplate):
