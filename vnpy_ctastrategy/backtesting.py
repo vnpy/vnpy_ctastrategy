@@ -1,24 +1,26 @@
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import Callable
-from itertools import product
-from functools import lru_cache
-from time import time
-import multiprocessing
-import random
+
+from functools import lru_cache, partial
 import traceback
 
 import numpy as np
 from pandas import DataFrame
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from deap import creator, base, tools, algorithms
 
 from vnpy.trader.constant import (Direction, Offset, Exchange,
                                   Interval, Status)
 from vnpy.trader.database import database_manager
 from vnpy.trader.object import OrderData, TradeData, BarData, TickData
 from vnpy.trader.utility import round_to
+from vnpy.trader.optimize import (
+    OptimizationSetting,
+    check_optimization_setting,
+    run_bf_optimization,
+    run_ga_optimization
+)
 
 from .base import (
     BacktestingMode,
@@ -29,73 +31,6 @@ from .base import (
     INTERVAL_DELTA_MAP
 )
 from .template import CtaTemplate
-
-
-# Set deap algo
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-creator.create("Individual", list, fitness=creator.FitnessMax)
-
-
-class OptimizationSetting:
-    """
-    Setting for runnning optimization.
-    """
-
-    def __init__(self):
-        """"""
-        self.params = {}
-        self.target_name = ""
-
-    def add_parameter(
-        self, name: str, start: float, end: float = None, step: float = None
-    ):
-        """"""
-        if not end and not step:
-            self.params[name] = [start]
-            return
-
-        if start >= end:
-            print("参数优化起始点必须小于终止点")
-            return
-
-        if step <= 0:
-            print("参数优化步进必须大于0")
-            return
-
-        value = start
-        value_list = []
-
-        while value <= end:
-            value_list.append(value)
-            value += step
-
-        self.params[name] = value_list
-
-    def set_target(self, target_name: str):
-        """"""
-        self.target_name = target_name
-
-    def generate_setting(self):
-        """"""
-        keys = self.params.keys()
-        values = self.params.values()
-        products = list(product(*values))
-
-        settings = []
-        for p in products:
-            setting = dict(zip(keys, p))
-            settings.append(setting)
-
-        return settings
-
-    def generate_setting_ga(self):
-        """"""
-        settings_ga = []
-        settings = self.generate_setting()
-        for d in settings:
-            param = [tuple(i) for i in d.items()]
-            settings_ga.append(param)
-        return settings_ga
 
 
 class BacktestingEngine:
@@ -587,228 +522,45 @@ class BacktestingEngine:
         fig.update_layout(height=1000, width=1000)
         fig.show()
 
-    def run_optimization(self, optimization_setting: OptimizationSetting, output=True):
+    def run_bf_optimization(self, optimization_setting: OptimizationSetting, output=True):
         """"""
-        # Get optimization setting and target
-        settings = optimization_setting.generate_setting()
-        target_name = optimization_setting.target_name
-
-        if not settings:
-            self.output("优化参数组合为空，请检查")
+        if not check_optimization_setting(optimization_setting):
             return
 
-        if not target_name:
-            self.output("优化目标未设置，请检查")
-            return
-
-        # Use multiprocessing pool for running backtesting with different setting
-        # Force to use spawn method to create new process (instead of fork on Linux)
-        ctx = multiprocessing.get_context("spawn")
-        pool = ctx.Pool(multiprocessing.cpu_count())
-
-        # Preload historical data to shared multiprocessing manager.
-        manager = multiprocessing.Manager()
-        namespace = manager.Namespace()
-
-        if self.mode == BacktestingMode.BAR:
-            db_bars = load_bar_data(
-                self.symbol,
-                self.exchange,
-                self.interval,
-                self.start,
-                self.end
-            )
-
-            data = []
-            for db_bar in db_bars:
-                bar = BarData(
-                    db_bar.gateway_name,
-                    db_bar.symbol,
-                    db_bar.exchange,
-                    db_bar.datetime,
-                    db_bar.interval,
-                    db_bar.volume,
-                    db_bar.open_interest,
-                    db_bar.open_price,
-                    db_bar.high_price,
-                    db_bar.low_price,
-                    db_bar.close_price
-                )
-                data.append(bar)
-        else:
-            data = load_tick_data(
-                self.symbol,
-                self.exchange,
-                self.start,
-                self.end
-            )
-
-        namespace.data = data
-
-        # Use process pool to run backtesting job
-        results = []
-        for setting in settings:
-            result = (pool.apply_async(new_optimize, (
-                namespace,
-                target_name,
-                self.strategy_class,
-                setting,
-                self.vt_symbol,
-                self.interval,
-                self.start,
-                self.rate,
-                self.slippage,
-                self.size,
-                self.pricetick,
-                self.capital,
-                self.end,
-                self.mode,
-                self.inverse
-            )))
-            results.append(result)
-
-        pool.close()
-        pool.join()
-
-        # Sort results and output
-        result_values = [result.get() for result in results]
-        result_values.sort(reverse=True, key=lambda result: result[1])
-
-        if output:
-            for value in result_values:
-                msg = f"参数：{value[0]}, 目标：{value[1]}"
-                self.output(msg)
-
-        return result_values
-
-    def run_ga_optimization(self, optimization_setting: OptimizationSetting, population_size=100, ngen_size=30, output=True):
-        """"""
-        # Clear lru_cache before running ga optimization
-        _ga_optimize.cache_clear()
-
-        # Get optimization setting and target
-        settings = optimization_setting.generate_setting_ga()
-        target_name = optimization_setting.target_name
-
-        if not settings:
-            self.output("优化参数组合为空，请检查")
-            return
-
-        if not target_name:
-            self.output("优化目标未设置，请检查")
-            return
-
-        # Define parameter generation function
-        def generate_parameter():
-            """"""
-            return random.choice(settings)
-
-        def mutate_individual(individual, indpb):
-            """"""
-            size = len(individual)
-            paramlist = generate_parameter()
-            for i in range(size):
-                if random.random() < indpb:
-                    individual[i] = paramlist[i]
-            return individual,
-
-        # Create ga object function
-        global ga_target_name
-        global ga_strategy_class
-        global ga_setting
-        global ga_vt_symbol
-        global ga_interval
-        global ga_start
-        global ga_rate
-        global ga_slippage
-        global ga_size
-        global ga_pricetick
-        global ga_capital
-        global ga_end
-        global ga_mode
-        global ga_inverse
-
-        ga_target_name = target_name
-        ga_strategy_class = self.strategy_class
-        ga_setting = settings[0]
-        ga_vt_symbol = self.vt_symbol
-        ga_interval = self.interval
-        ga_start = self.start
-        ga_rate = self.rate
-        ga_slippage = self.slippage
-        ga_size = self.size
-        ga_pricetick = self.pricetick
-        ga_capital = self.capital
-        ga_end = self.end
-        ga_mode = self.mode
-        ga_inverse = self.inverse
-
-        # Set up genetic algorithm
-        toolbox = base.Toolbox()
-        toolbox.register("individual", tools.initIterate, creator.Individual, generate_parameter)
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-        toolbox.register("mate", tools.cxTwoPoint)
-        toolbox.register("mutate", mutate_individual, indpb=1)
-        toolbox.register("evaluate", ga_optimize)
-        toolbox.register("select", tools.selNSGA2)
-
-        total_size = len(settings)
-        pop_size = population_size                      # number of individuals in each generation
-        lambda_ = pop_size                              # number of children to produce at each generation
-        mu = int(pop_size * 0.8)                        # number of individuals to select for the next generation
-
-        cxpb = 0.95         # probability that an offspring is produced by crossover
-        mutpb = 1 - cxpb    # probability that an offspring is produced by mutation
-        ngen = ngen_size    # number of generation
-
-        pop = toolbox.population(pop_size)
-        hof = tools.ParetoFront()               # end result of pareto front
-
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        np.set_printoptions(suppress=True)
-        stats.register("mean", np.mean, axis=0)
-        stats.register("std", np.std, axis=0)
-        stats.register("min", np.min, axis=0)
-        stats.register("max", np.max, axis=0)
-
-        # Multiprocessing is not supported yet.
-        # pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        # toolbox.register("map", pool.map)
-
-        # Run ga optimization
-        self.output(f"参数优化空间：{total_size}")
-        self.output(f"每代族群总数：{pop_size}")
-        self.output(f"优良筛选个数：{mu}")
-        self.output(f"迭代次数：{ngen}")
-        self.output(f"交叉概率：{cxpb:.0%}")
-        self.output(f"突变概率：{mutpb:.0%}")
-
-        start = time()
-
-        algorithms.eaMuPlusLambda(
-            pop,
-            toolbox,
-            mu,
-            lambda_,
-            cxpb,
-            mutpb,
-            ngen,
-            stats,
-            halloffame=hof
+        evaluate_func: callable = wrap_evaluate(self, optimization_setting.target_name)
+        results = run_bf_optimization(
+            evaluate_func,
+            optimization_setting,
+            get_target_value,
+            output=self.output
         )
 
-        end = time()
-        cost = int((end - start))
+        if output:
+            for result in results:
+                msg: str = f"参数：{result[0]}, 目标：{result[1]}"
+                self.output(msg)
 
-        self.output(f"遗传算法优化完成，耗时{cost}秒")
+        return results
 
-        # Return result list
-        results = []
+    run_optimization = run_bf_optimization
 
-        for parameter_values in hof:
-            setting = dict(parameter_values)
-            target_value = ga_optimize(parameter_values)[0]
-            results.append((setting, target_value, {}))
+    def run_ga_optimization(self, optimization_setting: OptimizationSetting, output=True):
+        """"""
+        if not check_optimization_setting(optimization_setting):
+            return
+
+        evaluate_func: callable = wrap_evaluate(self, optimization_setting.target_name)
+        results = run_ga_optimization(
+            evaluate_func,
+            optimization_setting,
+            get_target_value,
+            output=self.output
+        )
+
+        if output:
+            for result in results:
+                msg: str = f"参数：{result[0]}, 目标：{result[1]}"
+                self.output(msg)
 
         return results
 
@@ -1283,10 +1035,36 @@ class DailyResult:
         self.net_pnl = self.total_pnl - self.commission - self.slippage
 
 
-def optimize(
+@lru_cache(maxsize=999)
+def load_bar_data(
+    symbol: str,
+    exchange: Exchange,
+    interval: Interval,
+    start: datetime,
+    end: datetime
+):
+    """"""
+    return database_manager.load_bar_data(
+        symbol, exchange, interval, start, end
+    )
+
+
+@lru_cache(maxsize=999)
+def load_tick_data(
+    symbol: str,
+    exchange: Exchange,
+    start: datetime,
+    end: datetime
+):
+    """"""
+    return database_manager.load_tick_data(
+        symbol, exchange, start, end
+    )
+
+
+def evaluate(
     target_name: str,
     strategy_class: CtaTemplate,
-    setting: dict,
     vt_symbol: str,
     interval: Interval,
     start: datetime,
@@ -1297,7 +1075,8 @@ def optimize(
     capital: int,
     end: datetime,
     mode: BacktestingMode,
-    inverse: bool
+    inverse: bool,
+    setting: dict
 ):
     """
     Function for running in multiprocessing.pool
@@ -1328,119 +1107,31 @@ def optimize(
     return (str(setting), target_value, statistics)
 
 
-def new_optimize(
-    namespace: object,
-    target_name: str,
-    strategy_class: CtaTemplate,
-    setting: dict,
-    vt_symbol: str,
-    interval: Interval,
-    start: datetime,
-    rate: float,
-    slippage: float,
-    size: float,
-    pricetick: float,
-    capital: int,
-    end: datetime,
-    mode: BacktestingMode,
-    inverse: bool
-):
+def wrap_evaluate(engine: BacktestingEngine, target_name: str) -> callable:
     """
-    Function for running in multiprocessing.pool
+    Wrap evaluate function with given setting from backtesting engine.
     """
-    engine = BacktestingEngine()
-
-    engine.set_parameters(
-        vt_symbol=vt_symbol,
-        interval=interval,
-        start=start,
-        rate=rate,
-        slippage=slippage,
-        size=size,
-        pricetick=pricetick,
-        capital=capital,
-        end=end,
-        mode=mode,
-        inverse=inverse
+    func: callable = partial(
+        evaluate,
+        target_name,
+        engine.strategy_class,
+        engine.vt_symbol,
+        engine.interval,
+        engine.start,
+        engine.rate,
+        engine.slippage,
+        engine.size,
+        engine.pricetick,
+        engine.capital,
+        engine.end,
+        engine.mode,
+        engine.inverse
     )
-
-    engine.add_strategy(strategy_class, setting)
-    engine.history_data = namespace.data
-    engine.run_backtesting()
-    engine.calculate_result()
-    statistics = engine.calculate_statistics(output=False)
-
-    target_value = statistics[target_name]
-    return (str(setting), target_value, statistics)
+    return func
 
 
-@lru_cache(maxsize=1000000)
-def _ga_optimize(parameter_values: tuple):
-    """"""
-    setting = dict(parameter_values)
-
-    result = optimize(
-        ga_target_name,
-        ga_strategy_class,
-        setting,
-        ga_vt_symbol,
-        ga_interval,
-        ga_start,
-        ga_rate,
-        ga_slippage,
-        ga_size,
-        ga_pricetick,
-        ga_capital,
-        ga_end,
-        ga_mode,
-        ga_inverse
-    )
-    return (result[1],)
-
-
-def ga_optimize(parameter_values: list):
-    """"""
-    return _ga_optimize(tuple(parameter_values))
-
-
-@lru_cache(maxsize=999)
-def load_bar_data(
-    symbol: str,
-    exchange: Exchange,
-    interval: Interval,
-    start: datetime,
-    end: datetime
-):
-    """"""
-    return database_manager.load_bar_data(
-        symbol, exchange, interval, start, end
-    )
-
-
-@lru_cache(maxsize=999)
-def load_tick_data(
-    symbol: str,
-    exchange: Exchange,
-    start: datetime,
-    end: datetime
-):
-    """"""
-    return database_manager.load_tick_data(
-        symbol, exchange, start, end
-    )
-
-
-# GA related global value
-ga_end = None
-ga_mode = None
-ga_target_name = None
-ga_strategy_class = None
-ga_setting = None
-ga_vt_symbol = None
-ga_interval = None
-ga_start = None
-ga_rate = None
-ga_slippage = None
-ga_size = None
-ga_pricetick = None
-ga_capital = None
+def get_target_value(result: list) -> float:
+    """
+    Get target value for sorting optimization results.
+    """
+    return result[1]
