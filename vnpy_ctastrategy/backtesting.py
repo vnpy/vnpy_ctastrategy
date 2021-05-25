@@ -50,7 +50,8 @@ class BacktestingEngine:
         self.size = 1
         self.pricetick = 0
         self.capital = 1_000_000
-        self.risk_free: float = 0.02
+        self.risk_free: float = 0
+        self.annual_days: int = 240
         self.mode = BacktestingMode.BAR
         self.inverse = False
 
