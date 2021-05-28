@@ -94,11 +94,15 @@ class RolloverTool(QtWidgets.QDialog):
 
         payup = self.payup_spin.value()
 
-        # Check all strategies inited (pos data loaded from disk json file)
+        # Check all strategies inited (pos data loaded from disk json file) and not trading
         strategies = self.cta_engine.symbol_strategy_map[old_symbol]
         for strategy in strategies:
             if not strategy.inited:
                 self.write_log(f"策略{strategy.strategy_name}尚未初始化，无法执行移仓")
+                return
+            
+            if strategy.trading:
+                self.write_log(f"策略{strategy.strategy_name}正在运行中，无法执行移仓")
                 return
 
         # Roll position first
