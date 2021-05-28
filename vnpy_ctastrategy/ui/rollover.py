@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import sleep
 from typing import TYPE_CHECKING
+from copy import copy
 
 from vnpy.trader.engine import MainEngine
 from vnpy.trader.constant import OrderType
@@ -109,7 +110,7 @@ class RolloverTool(QtWidgets.QDialog):
         self.roll_position(old_symbol, new_symbol, payup)
 
         # Then roll strategy
-        for strategy in strategies:
+        for strategy in copy(strategies):
             self.roll_strategy(strategy, new_symbol)
 
         # Disable self
