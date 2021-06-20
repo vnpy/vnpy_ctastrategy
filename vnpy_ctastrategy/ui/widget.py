@@ -369,6 +369,10 @@ class StopOrderMonitor(BaseMonitor):
         "strategy_name": {"display": "策略名", "cell": BaseCell, "update": False},
     }
 
+    def __del__(self) -> None:
+        """"""
+        pass
+
 
 class LogMonitor(BaseMonitor):
     """
