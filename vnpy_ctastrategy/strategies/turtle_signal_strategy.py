@@ -1,4 +1,4 @@
-from vnpy.app.cta_strategy import (
+from vnpy_ctastrategy import (
     CtaTemplate,
     StopOrder,
     Direction,
