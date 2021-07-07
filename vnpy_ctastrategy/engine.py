@@ -800,7 +800,7 @@ class CtaEngine(BaseEngine):
         Load strategy class from certain folder.
         """
         for suffix in ["py", "pyd", "so"]:
-            pathname: str = str(path) + f"\\*.{suffix}"
+            pathname: str = str(path.joinpath(f"*.{suffix}"))
             for filepath in glob(pathname):
                 filename: str = Path(filepath).stem
                 name: str = f"{module_name}.{filename}"
