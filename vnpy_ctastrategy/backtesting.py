@@ -638,7 +638,8 @@ class BacktestingEngine:
             order.status = Status.ALLTRADED
             self.strategy.on_order(order)
 
-            self.active_limit_orders.pop(order.vt_orderid)
+            if order.vt_orderid in self.active_limit_orders:
+                self.active_limit_orders.pop(order.vt_orderid)
 
             # Push trade update
             self.trade_count += 1
