@@ -148,7 +148,7 @@ class CtaEngine(BaseEngine):
             start=start,
             end=end
         )
-        data = self.datafeed.query_history(req)
+        data = self.datafeed.query_bar_history(req)
         return data
 
     def process_tick_event(self, event: Event):
