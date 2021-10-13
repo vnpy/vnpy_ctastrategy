@@ -421,8 +421,10 @@ class TargetPosTemplate(CtaTemplate):
 
     def set_target_pos(self, target_pos):
         """"""
-        self.target_pos = target_pos
-        self.trade()
+        if target_pos != self.target_pos:
+            self.target_pos = target_pos
+            self.put_event()
+            self.trade()
 
     def trade(self):
         """"""
