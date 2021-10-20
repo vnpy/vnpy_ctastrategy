@@ -37,9 +37,9 @@ from vnpy.trader.constant import (
     Status
 )
 from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to
-from vnpy.trader.rqdata import rqdata_client
 from vnpy.trader.converter import OffsetConverter
-from vnpy.trader.database import database_manager
+from vnpy.trader.database import BaseDatabase, get_database
+from vnpy.trader.datafeed import BaseDatafeed, get_datafeed
 
 from .base import (
     APP_NAME,
@@ -103,10 +103,13 @@ class CtaEngine(BaseEngine):
 
         self.offset_converter = OffsetConverter(self.main_engine)
 
+        self.database: BaseDatabase = get_database()
+        self.datafeed: BaseDatafeed = get_datafeed()
+
     def init_engine(self):
         """
         """
-        self.init_rqdata()
+        self.init_datafeed()
         self.load_strategy_class()
         self.load_strategy_setting()
         self.load_strategy_data()
@@ -124,19 +127,19 @@ class CtaEngine(BaseEngine):
         self.event_engine.register(EVENT_TRADE, self.process_trade_event)
         self.event_engine.register(EVENT_POSITION, self.process_position_event)
 
-    def init_rqdata(self):
+    def init_datafeed(self):
         """
-        Init RQData client.
+        Init datafeed client.
         """
-        result = rqdata_client.init()
+        result = self.datafeed.init()
         if result:
-            self.write_log("RQData数据接口初始化成功")
+            self.write_log("数据服务初始化成功")
 
-    def query_bar_from_rq(
+    def query_bar_from_datafeed(
         self, symbol: str, exchange: Exchange, interval: Interval, start: datetime, end: datetime
     ):
         """
-        Query bar data from RQData.
+        Query bar data from datafeed.
         """
         req = HistoryRequest(
             symbol=symbol,
@@ -145,7 +148,7 @@ class CtaEngine(BaseEngine):
             start=start,
             end=end
         )
-        data = rqdata_client.query_history(req)
+        data = self.datafeed.query_bar_history(req)
         return data
 
     def process_tick_event(self, event: Event):
@@ -554,7 +557,7 @@ class CtaEngine(BaseEngine):
         start = end - timedelta(days)
         bars = []
 
-        # Pass gateway and RQData if use_database set to True
+        # Pass gateway and datafeed if use_database set to True
         if not use_database:
             # Query bars from gateway if available
             contract = self.main_engine.get_contract(vt_symbol)
@@ -569,12 +572,12 @@ class CtaEngine(BaseEngine):
                 )
                 bars = self.main_engine.query_history(req, contract.gateway_name)
 
-            # Try to query bars from RQData, if not found, load from database.
+            # Try to query bars from datafeed, if not found, load from database.
             else:
-                bars = self.query_bar_from_rq(symbol, exchange, interval, start, end)
+                bars = self.query_bar_from_datafeed(symbol, exchange, interval, start, end)
 
         if not bars:
-            bars = database_manager.load_bar_data(
+            bars = self.database.load_bar_data(
                 symbol=symbol,
                 exchange=exchange,
                 interval=interval,
@@ -596,7 +599,7 @@ class CtaEngine(BaseEngine):
         end = datetime.now(LOCAL_TZ)
         start = end - timedelta(days)
 
-        ticks = database_manager.load_tick_data(
+        ticks = self.database.load_tick_data(
             symbol=symbol,
             exchange=exchange,
             start=start,

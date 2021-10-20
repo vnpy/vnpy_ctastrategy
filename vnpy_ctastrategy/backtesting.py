@@ -11,7 +11,7 @@ from plotly.subplots import make_subplots
 
 from vnpy.trader.constant import (Direction, Offset, Exchange,
                                   Interval, Status)
-from vnpy.trader.database import database_manager
+from vnpy.trader.database import get_database
 from vnpy.trader.object import OrderData, TradeData, BarData, TickData
 from vnpy.trader.utility import round_to
 from vnpy.trader.optimize import (
@@ -348,7 +348,9 @@ class BacktestingEngine:
             df["balance"] = df["net_pnl"].cumsum() + self.capital
 
             # When balance falls below 0, set daily return to 0
-            x = df["balance"] / df["balance"].shift(1)
+            pre_balance = df["balance"].shift(1)
+            pre_balance.iloc[0] = self.capital
+            x = df["balance"] / pre_balance
             x[x <= 0] = np.nan
             df["return"] = np.log(x).fillna(0)
 
@@ -638,7 +640,8 @@ class BacktestingEngine:
             order.status = Status.ALLTRADED
             self.strategy.on_order(order)
 
-            self.active_limit_orders.pop(order.vt_orderid)
+            if order.vt_orderid in self.active_limit_orders:
+                self.active_limit_orders.pop(order.vt_orderid)
 
             # Push trade update
             self.trade_count += 1
@@ -1044,7 +1047,9 @@ def load_bar_data(
     end: datetime
 ):
     """"""
-    return database_manager.load_bar_data(
+    database = get_database()
+
+    return database.load_bar_data(
         symbol, exchange, interval, start, end
     )
 
@@ -1057,7 +1062,9 @@ def load_tick_data(
     end: datetime
 ):
     """"""
-    return database_manager.load_tick_data(
+    database = get_database()
+
+    return database.load_tick_data(
         symbol, exchange, start, end
     )
 

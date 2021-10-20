@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import sleep
 from typing import TYPE_CHECKING
+from copy import copy
 
 from vnpy.trader.engine import MainEngine
 from vnpy.trader.constant import OrderType
@@ -45,6 +46,11 @@ class RolloverTool(QtWidgets.QDialog):
         self.payup_spin = QtWidgets.QSpinBox()
         self.payup_spin.setMinimum(5)
 
+        self.max_volume_spin = QtWidgets.QSpinBox()
+        self.max_volume_spin.setMinimum(1)
+        self.max_volume_spin.setMaximum(10000)
+        self.max_volume_spin.setValue(100)
+
         self.log_edit = QtWidgets.QTextEdit()
         self.log_edit.setReadOnly(True)
         self.log_edit.setMinimumWidth(500)
@@ -57,6 +63,7 @@ class RolloverTool(QtWidgets.QDialog):
         form.addRow("移仓合约", self.old_symbol_combo)
         form.addRow("目标合约", self.new_symbol_line)
         form.addRow("委托超价", self.payup_spin)
+        form.addRow("单笔上限", self.max_volume_spin)
         form.addRow(button)
 
         hbox = QtWidgets.QHBoxLayout()
@@ -94,18 +101,22 @@ class RolloverTool(QtWidgets.QDialog):
 
         payup = self.payup_spin.value()
 
-        # Check all strategies inited (pos data loaded from disk json file)
+        # Check all strategies inited (pos data loaded from disk json file) and not trading
         strategies = self.cta_engine.symbol_strategy_map[old_symbol]
         for strategy in strategies:
             if not strategy.inited:
                 self.write_log(f"策略{strategy.strategy_name}尚未初始化，无法执行移仓")
+                return
+            
+            if strategy.trading:
+                self.write_log(f"策略{strategy.strategy_name}正在运行中，无法执行移仓")
                 return
 
         # Roll position first
         self.roll_position(old_symbol, new_symbol, payup)
 
         # Then roll strategy
-        for strategy in strategies:
+        for strategy in copy(strategies):
             self.roll_strategy(strategy, new_symbol)
 
         # Disable self
@@ -203,6 +214,8 @@ class RolloverTool(QtWidgets.QDialog):
         """
         Send a new order to server.
         """
+        max_volume: int = self.max_volume_spin.value()
+
         contract: ContractData = self.main_engine.get_contract(vt_symbol)
         tick: TickData = self.main_engine.get_tick(vt_symbol)
         offset_converter: OffsetConverter = self.cta_engine.offset_converter
@@ -212,27 +225,35 @@ class RolloverTool(QtWidgets.QDialog):
         else:
             price = tick.bid_price_1 - contract.pricetick * payup
 
-        original_req: OrderRequest = OrderRequest(
-            symbol=contract.symbol,
-            exchange=contract.exchange,
-            direction=direction,
-            offset=offset,
-            type=OrderType.LIMIT,
-            price=price,
-            volume=volume,
-            reference=f"{APP_NAME}_Rollover"
-        )
+        while True:
+            order_volume: int = min(volume, max_volume)
 
-        req_list = offset_converter.convert_order_request(original_req, False, False)
+            original_req: OrderRequest = OrderRequest(
+                symbol=contract.symbol,
+                exchange=contract.exchange,
+                direction=direction,
+                offset=offset,
+                type=OrderType.LIMIT,
+                price=price,
+                volume=order_volume,
+                reference=f"{APP_NAME}_Rollover"
+            )
 
-        vt_orderids = []
-        for req in req_list:
-            vt_orderid = self.main_engine.send_order(req, contract.gateway_name)
-            if not vt_orderid:
-                continue
+            req_list = offset_converter.convert_order_request(original_req, False, False)
 
-            vt_orderids.append(vt_orderid)
-            offset_converter.update_order_request(req, vt_orderid)
+            vt_orderids = []
+            for req in req_list:
+                vt_orderid = self.main_engine.send_order(req, contract.gateway_name)
+                if not vt_orderid:
+                    continue
 
-            msg = f"发出委托{vt_symbol}，{direction.value} {offset.value}，{volume}@{price}"
-            self.write_log(msg)
+                vt_orderids.append(vt_orderid)
+                offset_converter.update_order_request(req, vt_orderid)
+
+                msg = f"发出委托{vt_symbol}，{direction.value} {offset.value}，{volume}@{price}"
+                self.write_log(msg)
+
+            # Check whether all volume sent
+            volume = volume - order_volume
+            if not volume:
+                break
