@@ -689,7 +689,7 @@ class CtaEngine(BaseEngine):
         if data:
             for name in strategy.variables:
                 value = data.get(name, None)
-                if value:
+                if value is not None:
                     setattr(strategy, name, value)
 
         # Subscribe market data
