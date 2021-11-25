@@ -472,12 +472,14 @@ class MultiSignalStrategy(TargetPosTemplate):
         Callback of new tick data update.
         策略信号都是用的1minute数据，所以在总的策略中一次生成分钟数据，然后每个signal直接使用分钟数据
         """
+        super(MultiSignalStrategy, self).on_tick(tick)
         self.bg.update_tick(tick)
 
     def on_bar(self, bar: BarData):
         """
         Callback of new bar data update.
         """
+        super(MultiSignalStrategy, self).on_bar(bar)
         for k, v in self.signal_dict.items():
             v.on_bar(bar)
         self.calculate_target_pos()
