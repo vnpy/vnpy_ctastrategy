@@ -158,7 +158,7 @@ class CtaEngine(BaseEngine):
         strategies = self.symbol_strategy_map[tick.vt_symbol]
         if not strategies:
             return
-
+        self.offset_converter.before_handle_tick(tick)
         self.check_stop_order(tick)
 
         for strategy in strategies:
