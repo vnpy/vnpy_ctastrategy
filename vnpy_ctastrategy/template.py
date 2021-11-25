@@ -1,11 +1,12 @@
 """"""
 from abc import ABC
 from copy import copy
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 
 from vnpy.trader.constant import Interval, Direction, Offset
 from vnpy.trader.object import BarData, TickData, OrderData, TradeData
 from vnpy.trader.utility import virtual
+
 
 from .base import StopOrder, EngineType
 
@@ -150,8 +151,9 @@ class CtaTemplate(ABC):
 
     def buy(
         self,
-        price: float,
+        limit_price: float,
         volume: float,
+        signal_price: float = None,
         stop: bool = False,
         lock: bool = False,
         net: bool = False
@@ -160,19 +162,21 @@ class CtaTemplate(ABC):
         Send buy order to open a long position.
         """
         return self.send_order(
-            Direction.LONG,
-            Offset.OPEN,
-            price,
-            volume,
-            stop,
-            lock,
-            net
+            direction=Direction.LONG,
+            offset=Offset.OPEN,
+            price=limit_price,
+            volume=volume,
+            signal_price=signal_price,
+            stop=stop,
+            lock=lock,
+            net=net
         )
 
     def sell(
         self,
-        price: float,
+        limit_price: float,
         volume: float,
+        signal_price: float = None,
         stop: bool = False,
         lock: bool = False,
         net: bool = False
@@ -181,19 +185,21 @@ class CtaTemplate(ABC):
         Send sell order to close a long position.
         """
         return self.send_order(
-            Direction.SHORT,
-            Offset.CLOSE,
-            price,
-            volume,
-            stop,
-            lock,
-            net
+            direction=Direction.SHORT,
+            offset=Offset.CLOSE,
+            price=limit_price,
+            volume=volume,
+            signal_price=signal_price,
+            stop=stop,
+            lock=lock,
+            net=net
         )
 
     def short(
         self,
-        price: float,
+        limit_price: float,
         volume: float,
+        signal_price: float = None,
         stop: bool = False,
         lock: bool = False,
         net: bool = False
@@ -202,19 +208,21 @@ class CtaTemplate(ABC):
         Send short order to open as short position.
         """
         return self.send_order(
-            Direction.SHORT,
-            Offset.OPEN,
-            price,
-            volume,
-            stop,
-            lock,
-            net
+            direction=Direction.SHORT,
+            offset=Offset.OPEN,
+            price=limit_price,
+            volume=volume,
+            signal_price=signal_price,
+            stop=stop,
+            lock=lock,
+            net=net
         )
 
     def cover(
         self,
-        price: float,
+        limit_price: float,
         volume: float,
+        signal_price: float = None,
         stop: bool = False,
         lock: bool = False,
         net: bool = False
@@ -223,13 +231,14 @@ class CtaTemplate(ABC):
         Send cover order to close a short position.
         """
         return self.send_order(
-            Direction.LONG,
-            Offset.CLOSE,
-            price,
-            volume,
-            stop,
-            lock,
-            net
+            direction=Direction.LONG,
+            offset=Offset.CLOSE,
+            price=limit_price,
+            volume=volume,
+            signal_price=signal_price,
+            stop=stop,
+            lock=lock,
+            net=net
         )
 
     def send_order(
@@ -238,6 +247,7 @@ class CtaTemplate(ABC):
         offset: Offset,
         price: float,
         volume: float,
+        signal_price: float = None,
         stop: bool = False,
         lock: bool = False,
         net: bool = False
@@ -245,10 +255,18 @@ class CtaTemplate(ABC):
         """
         Send a new order.
         """
+        if signal_price is None:
+            signal_price = price
         if self.trading:
-            vt_orderids = self.cta_engine.send_order(
-                self, direction, offset, price, volume, stop, lock, net
-            )
+            vt_orderids = self.cta_engine.send_order(self,
+                                                     direction=direction,
+                                                     offset=offset,
+                                                     price=price,
+                                                     volume=volume,
+                                                     stop=stop,
+                                                     lock=lock,
+                                                     net=net,
+                                                     signal_price=signal_price)
             return vt_orderids
         else:
             return []
@@ -337,9 +355,16 @@ class CtaTemplate(ABC):
 class CtaSignal(ABC):
     """"""
 
-    def __init__(self):
-        """"""
+    variables = []          # 本信号中需要记录、持久化保存，初始化完成后加载的参数
+    parameters = []
+
+    def __init__(self, target_pos_template=None):
+        """
+
+        :param target_pos_template:
+        """
         self.signal_pos = 0
+        self.target_pos_template: TargetPosTemplate = target_pos_template
 
     @virtual
     def on_tick(self, tick: TickData):
@@ -356,21 +381,30 @@ class CtaSignal(ABC):
         pass
 
     def set_signal_pos(self, pos):
-        """"""
+        """
+        :param pos:
+        :return:
+        """
         self.signal_pos = pos
 
     def get_signal_pos(self):
         """"""
         return self.signal_pos
 
+    def write_log(self, msg: str):
+        self.target_pos_template.write_log(msg=msg)
+
 
 class TargetPosTemplate(CtaTemplate):
     """"""
     tick_add = 1
+    TB_add = 0.005          # 国债
 
     last_tick = None
     last_bar = None
     target_pos = 0
+    parameters = []
+    variables = ['last_order_time', 'pos', 'signal_pos', 'target_pos']
 
     def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
         """"""
@@ -380,6 +414,24 @@ class TargetPosTemplate(CtaTemplate):
         self.cancel_orderids = []
 
         self.variables.append("target_pos")
+        self.signal_dict: Dict[str, CtaSignal] = {}
+        self.signal_pos: Dict[str, int] = {}
+
+    def get_variables(self):
+        # 获取TargetPos的参数
+        var_dict = super(TargetPosTemplate, self).get_variables()
+        # 获取signal的参数
+        for k, v in self.signal_dict.items():
+            var_dict[k] = {vk: getattr(v, vk) for vk in v.variables}
+        return var_dict
+
+    def get_parameters(self):
+        # 获取TargetPos的参数
+        var_dict = super(TargetPosTemplate, self).get_parameters()
+        # 获取signal的参数
+        for k, v in self.signal_dict.items():
+            var_dict[k] = {vk: getattr(v, vk) for vk in v.parameters}
+        return var_dict
 
     @virtual
     def on_tick(self, tick: TickData):
@@ -419,10 +471,34 @@ class TargetPosTemplate(CtaTemplate):
         else:
             return True
 
+    def calculate_target_pos(self):
+        """
+        计算目标持仓
+        :return:
+        """
+        target_pos = 0
+        for k, v in self.signal_dict.items():
+            self.signal_pos[k] = v.get_signal_pos()
+            target_pos += self.signal_pos[k]
+        return self.set_target_pos(target_pos)
+
     def set_target_pos(self, target_pos):
         """"""
-        self.target_pos = target_pos
-        self.trade()
+        pos_change_flag = False
+        if target_pos != self.pos or target_pos != self.target_pos:
+            self.target_pos = target_pos
+            self.trade()
+            if self.last_tick:
+                self.last_order_time = self.last_tick.datetime.strftime('%Y-%m-%d %H:%M:%S')
+                signal_price = self.last_tick.last_price
+            else:
+                signal_price = self.last_bar.close_price
+                self.last_order_time = self.last_bar.datetime.strftime('%Y-%m-%d %H:%M:%S')
+            pos_change_flag = True
+            self.write_log(f'[{self.last_order_time}] pos change: {self.pos} --> {self.target_pos} | signal_price {signal_price}')
+        self.put_event()
+        # self.write_log('初始化过程中禁止下单!')
+        return pos_change_flag
 
     def trade(self):
         """"""
@@ -448,20 +524,22 @@ class TargetPosTemplate(CtaTemplate):
         short_price = 0
 
         if self.last_tick:
+            tick_add = self.TB_add if self.last_tick.symbol.startswith('T') else self.tick_add
             if pos_change > 0:
-                long_price = self.last_tick.ask_price_1 + self.tick_add
+                long_price = self.last_tick.ask_price_1 + tick_add
                 if self.last_tick.limit_up:
                     long_price = min(long_price, self.last_tick.limit_up)
             else:
-                short_price = self.last_tick.bid_price_1 - self.tick_add
+                short_price = self.last_tick.bid_price_1 - tick_add
                 if self.last_tick.limit_down:
                     short_price = max(short_price, self.last_tick.limit_down)
 
         else:
+            tick_add = self.TB_add if self.last_bar.symbol.startswith('T') else self.tick_add
             if pos_change > 0:
-                long_price = self.last_bar.close_price + self.tick_add
+                long_price = self.last_bar.close_price + tick_add
             else:
-                short_price = self.last_bar.close_price - self.tick_add
+                short_price = self.last_bar.close_price - tick_add
 
         if self.get_engine_type() == EngineType.BACKTESTING:
             if pos_change > 0:

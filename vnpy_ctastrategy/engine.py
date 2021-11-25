@@ -158,7 +158,7 @@ class CtaEngine(BaseEngine):
         strategies = self.symbol_strategy_map[tick.vt_symbol]
         if not strategies:
             return
-
+        self.offset_converter.before_handle_tick(tick)
         self.check_stop_order(tick)
 
         for strategy in strategies:
@@ -305,11 +305,14 @@ class CtaEngine(BaseEngine):
         volume: float,
         type: OrderType,
         lock: bool,
-        net: bool
+        net: bool,
+        signal_price
     ):
         """
         Send a new order to server.
         """
+        if signal_price is None:
+            signal_price = price
         # Create request and send order.
         original_req = OrderRequest(
             symbol=contract.symbol,
@@ -318,6 +321,7 @@ class CtaEngine(BaseEngine):
             offset=offset,
             type=type,
             price=price,
+            signal_price=signal_price,
             volume=volume,
             reference=f"{APP_NAME}_{strategy.strategy_name}"
         )
@@ -354,21 +358,23 @@ class CtaEngine(BaseEngine):
         price: float,
         volume: float,
         lock: bool,
-        net: bool
+        net: bool,
+        signal_price
     ):
         """
         Send a limit order to server.
         """
         return self.send_server_order(
-            strategy,
-            contract,
-            direction,
-            offset,
-            price,
-            volume,
-            OrderType.LIMIT,
-            lock,
-            net
+            strategy=strategy,
+            contract=contract,
+            direction=direction,
+            offset=offset,
+            price=price,
+            volume=volume,
+            type=OrderType.LIMIT,
+            lock=lock,
+            net=net,
+            signal_price=signal_price
         )
 
     def send_server_stop_order(
@@ -380,7 +386,8 @@ class CtaEngine(BaseEngine):
         price: float,
         volume: float,
         lock: bool,
-        net: bool
+        net: bool,
+        signal_price
     ):
         """
         Send a stop order to server.
@@ -397,7 +404,8 @@ class CtaEngine(BaseEngine):
             volume,
             OrderType.STOP,
             lock,
-            net
+            net,
+            signal_price
         )
 
     def send_local_stop_order(
@@ -408,7 +416,8 @@ class CtaEngine(BaseEngine):
         price: float,
         volume: float,
         lock: bool,
-        net: bool
+        net: bool,
+        signal_price
     ):
         """
         Create a new local stop order.
@@ -426,7 +435,8 @@ class CtaEngine(BaseEngine):
             strategy_name=strategy.strategy_name,
             datetime=datetime.now(LOCAL_TZ),
             lock=lock,
-            net=net
+            net=net,
+            signal_price=signal_price
         )
 
         self.stop_orders[stop_orderid] = stop_order
@@ -482,7 +492,8 @@ class CtaEngine(BaseEngine):
         volume: float,
         stop: bool,
         lock: bool,
-        net: bool
+        net: bool,
+        signal_price
     ):
         """
         """
@@ -498,15 +509,15 @@ class CtaEngine(BaseEngine):
         if stop:
             if contract.stop_supported:
                 return self.send_server_stop_order(
-                    strategy, contract, direction, offset, price, volume, lock, net
+                    strategy, contract, direction, offset, price, volume, lock, net, signal_price
                 )
             else:
                 return self.send_local_stop_order(
-                    strategy, direction, offset, price, volume, lock, net
+                    strategy, direction, offset, price, volume, lock, net, signal_price
                 )
         else:
             return self.send_limit_order(
-                strategy, contract, direction, offset, price, volume, lock, net
+                strategy, contract, direction, offset, price, volume, lock, net, signal_price
             )
 
     def cancel_order(self, strategy: CtaTemplate, vt_orderid: str):
