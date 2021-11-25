@@ -525,6 +525,7 @@ class TargetPosTemplate(CtaTemplate):
 
         if self.last_tick:
             tick_add = self.TB_add if self.last_tick.symbol.startswith('T') else self.tick_add
+            signal_price = self.last_tick.last_price
             if pos_change > 0:
                 long_price = self.last_tick.ask_price_1 + tick_add
                 if self.last_tick.limit_up:
@@ -536,6 +537,7 @@ class TargetPosTemplate(CtaTemplate):
 
         else:
             tick_add = self.TB_add if self.last_bar.symbol.startswith('T') else self.tick_add
+            signal_price = self.last_bar.close_price
             if pos_change > 0:
                 long_price = self.last_bar.close_price + tick_add
             else:
@@ -543,9 +545,9 @@ class TargetPosTemplate(CtaTemplate):
 
         if self.get_engine_type() == EngineType.BACKTESTING:
             if pos_change > 0:
-                vt_orderids = self.buy(long_price, abs(pos_change))
+                vt_orderids = self.buy(long_price, abs(pos_change), signal_price=signal_price)
             else:
-                vt_orderids = self.short(short_price, abs(pos_change))
+                vt_orderids = self.short(short_price, abs(pos_change), signal_price=signal_price)
             self.active_orderids.extend(vt_orderids)
 
         else:
@@ -555,17 +557,17 @@ class TargetPosTemplate(CtaTemplate):
             if pos_change > 0:
                 if self.pos < 0:
                     if pos_change < abs(self.pos):
-                        vt_orderids = self.cover(long_price, pos_change)
+                        vt_orderids = self.cover(long_price, pos_change, signal_price=signal_price)
                     else:
-                        vt_orderids = self.cover(long_price, abs(self.pos))
+                        vt_orderids = self.cover(long_price, abs(self.pos), signal_price=signal_price)
                 else:
-                    vt_orderids = self.buy(long_price, abs(pos_change))
+                    vt_orderids = self.buy(long_price, abs(pos_change), signal_price=signal_price)
             else:
                 if self.pos > 0:
                     if abs(pos_change) < self.pos:
-                        vt_orderids = self.sell(short_price, abs(pos_change))
+                        vt_orderids = self.sell(short_price, abs(pos_change), signal_price=signal_price)
                     else:
-                        vt_orderids = self.sell(short_price, abs(self.pos))
+                        vt_orderids = self.sell(short_price, abs(self.pos), signal_price=signal_price)
                 else:
-                    vt_orderids = self.short(short_price, abs(pos_change))
+                    vt_orderids = self.short(short_price, abs(pos_change), signal_price=signal_price)
             self.active_orderids.extend(vt_orderids)
