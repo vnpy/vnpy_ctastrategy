@@ -785,14 +785,15 @@ class BacktestingEngine:
         volume: float,
         stop: bool,
         lock: bool,
-        net: bool
+        net: bool,
+        signal_price: float = 0.0
     ):
         """"""
         price = round_to(price, self.pricetick)
         if stop:
-            vt_orderid = self.send_stop_order(direction, offset, price, volume)
+            vt_orderid = self.send_stop_order(direction, offset, price, volume, signal_price=signal_price)
         else:
-            vt_orderid = self.send_limit_order(direction, offset, price, volume)
+            vt_orderid = self.send_limit_order(direction, offset, price, volume, signal_price=signal_price)
         return [vt_orderid]
 
     def send_stop_order(
@@ -800,7 +801,8 @@ class BacktestingEngine:
         direction: Direction,
         offset: Offset,
         price: float,
-        volume: float
+        volume: float,
+        signal_price: float = 0.0
     ):
         """"""
         self.stop_order_count += 1
@@ -814,6 +816,7 @@ class BacktestingEngine:
             datetime=self.datetime,
             stop_orderid=f"{STOPORDER_PREFIX}.{self.stop_order_count}",
             strategy_name=self.strategy.strategy_name,
+            signal_price=signal_price
         )
 
         self.active_stop_orders[stop_order.stop_orderid] = stop_order
@@ -826,7 +829,8 @@ class BacktestingEngine:
         direction: Direction,
         offset: Offset,
         price: float,
-        volume: float
+        volume: float,
+        signal_price: float = 0.0
     ):
         """"""
         self.limit_order_count += 1
@@ -841,7 +845,8 @@ class BacktestingEngine:
             volume=volume,
             status=Status.SUBMITTING,
             gateway_name=self.gateway_name,
-            datetime=self.datetime
+            datetime=self.datetime,
+            signal_price=signal_price
         )
 
         self.active_limit_orders[order.vt_orderid] = order
