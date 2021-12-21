@@ -667,7 +667,7 @@ class CtaEngine(BaseEngine):
         """
         Init a strategy.
         """
-        self.init_executor.submit(self._init_strategy, strategy_name)
+        return self.init_executor.submit(self._init_strategy, strategy_name)
 
     def _init_strategy(self, strategy_name: str):
         """
@@ -872,8 +872,10 @@ class CtaEngine(BaseEngine):
     def init_all_strategies(self):
         """
         """
+        futures = {}
         for strategy_name in self.strategies.keys():
-            self.init_strategy(strategy_name)
+            futures[strategy_name] = self.init_strategy(strategy_name)
+        return futures
 
     def start_all_strategies(self):
         """
