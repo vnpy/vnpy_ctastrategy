@@ -298,7 +298,7 @@ class CtaTemplate(ABC):
         if not callback:
             callback = self.on_bar
 
-        self.cta_engine.load_bar(
+        bars = self.cta_engine.load_bar(
             self.vt_symbol,
             days,
             interval,
@@ -306,11 +306,17 @@ class CtaTemplate(ABC):
             use_database
         )
 
+        for bar in bars:
+            callback(bar)
+
     def load_tick(self, days: int):
         """
         Load historical tick data for initializing strategy.
         """
-        self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
+        ticks = self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
+
+        for tick in ticks:
+            self.on_tick(tick)
 
     def put_event(self):
         """
