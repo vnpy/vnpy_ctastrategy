@@ -107,7 +107,7 @@ class RolloverTool(QtWidgets.QDialog):
             if not strategy.inited:
                 self.write_log(f"策略{strategy.strategy_name}尚未初始化，无法执行移仓")
                 return
-            
+
             if strategy.trading:
                 self.write_log(f"策略{strategy.strategy_name}正在运行中，无法执行移仓")
                 return

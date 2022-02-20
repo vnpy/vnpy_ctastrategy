@@ -4,7 +4,7 @@ import importlib
 import traceback
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, List
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
@@ -550,7 +550,7 @@ class CtaEngine(BaseEngine):
         interval: Interval,
         callback: Callable[[BarData], None],
         use_database: bool
-    ):
+    ) -> List[BarData]:
         """"""
         symbol, exchange = extract_vt_symbol(vt_symbol)
         end = datetime.now(LOCAL_TZ)
@@ -585,15 +585,14 @@ class CtaEngine(BaseEngine):
                 end=end,
             )
 
-        for bar in bars:
-            callback(bar)
+        return bars
 
     def load_tick(
         self,
         vt_symbol: str,
         days: int,
         callback: Callable[[TickData], None]
-    ):
+    ) -> List[TickData]:
         """"""
         symbol, exchange = extract_vt_symbol(vt_symbol)
         end = datetime.now(LOCAL_TZ)
@@ -606,8 +605,7 @@ class CtaEngine(BaseEngine):
             end=end,
         )
 
-        for tick in ticks:
-            callback(tick)
+        return ticks
 
     def call_strategy_func(
         self, strategy: CtaTemplate, func: Callable, params: Any = None

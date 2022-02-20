@@ -49,4 +49,4 @@ class CtaStrategyApp(BaseApp):
     display_name = "CTA策略"
     engine_class = CtaEngine
     widget_name = "CtaManager"
-    icon_name = "cta.ico"
+    icon_name = str(app_path.joinpath("ui", "cta.ico"))
