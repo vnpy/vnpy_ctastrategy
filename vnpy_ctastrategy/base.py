@@ -5,27 +5,28 @@ Defines constants and objects used in CtaStrategy App.
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime, timedelta
+from typing import Dict
 
 from vnpy.trader.constant import Direction, Offset, Interval
 
-APP_NAME = "CtaStrategy"
-STOPORDER_PREFIX = "STOP"
+APP_NAME: str = "CtaStrategy"
+STOPORDER_PREFIX: str = "STOP"
 
 
 class StopOrderStatus(Enum):
-    WAITING = "等待中"
-    CANCELLED = "已撤销"
-    TRIGGERED = "已触发"
+    WAITING: str = "等待中"
+    CANCELLED: str = "已撤销"
+    TRIGGERED: str = "已触发"
 
 
 class EngineType(Enum):
-    LIVE = "实盘"
-    BACKTESTING = "回测"
+    LIVE: str = "实盘"
+    BACKTESTING: str = "回测"
 
 
 class BacktestingMode(Enum):
-    BAR = 1
-    TICK = 2
+    BAR: int = 1
+    TICK: int = 2
 
 
 @dataclass
@@ -44,11 +45,11 @@ class StopOrder:
     status: StopOrderStatus = StopOrderStatus.WAITING
 
 
-EVENT_CTA_LOG = "eCtaLog"
-EVENT_CTA_STRATEGY = "eCtaStrategy"
-EVENT_CTA_STOPORDER = "eCtaStopOrder"
+EVENT_CTA_LOG: str = "eCtaLog"
+EVENT_CTA_STRATEGY: str = "eCtaStrategy"
+EVENT_CTA_STOPORDER: str = "eCtaStopOrder"
 
-INTERVAL_DELTA_MAP = {
+INTERVAL_DELTA_MAP: Dict[Interval, timedelta] = {
     Interval.TICK: timedelta(milliseconds=1),
     Interval.MINUTE: timedelta(minutes=1),
     Interval.HOUR: timedelta(hours=1),
