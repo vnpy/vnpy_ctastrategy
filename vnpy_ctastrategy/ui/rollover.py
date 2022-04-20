@@ -1,6 +1,6 @@
 from datetime import datetime
 from time import sleep
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from copy import copy
 
 from vnpy.trader.engine import MainEngine
@@ -79,7 +79,7 @@ class RolloverTool(QtWidgets.QDialog):
 
     def subscribe(self, vt_symbol: str) -> None:
         """"""
-        contract: ContractData = self.main_engine.get_contract(vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
         if not contract:
             return
 
@@ -94,7 +94,7 @@ class RolloverTool(QtWidgets.QDialog):
         self.subscribe(new_symbol)
         sleep(1)
 
-        new_tick: TickData = self.main_engine.get_tick(new_symbol)
+        new_tick: Optional[TickData] = self.main_engine.get_tick(new_symbol)
         if not new_tick:
             self.write_log(f"无法获取目标合约{new_symbol}的盘口数据，请先订阅行情")
             return
@@ -216,8 +216,8 @@ class RolloverTool(QtWidgets.QDialog):
         """
         max_volume: int = self.max_volume_spin.value()
 
-        contract: ContractData = self.main_engine.get_contract(vt_symbol)
-        tick: TickData = self.main_engine.get_tick(vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
+        tick: Optional[TickData] = self.main_engine.get_tick(vt_symbol)
         offset_converter: OffsetConverter = self.cta_engine.offset_converter
 
         if direction == Direction.LONG:

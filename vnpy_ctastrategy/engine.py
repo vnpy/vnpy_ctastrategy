@@ -3,7 +3,7 @@ import traceback
 from collections import defaultdict
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
@@ -266,7 +266,7 @@ class CtaEngine(BaseEngine):
                     else:
                         price = tick.bid_price_5
 
-                contract: ContractData = self.main_engine.get_contract(stop_order.vt_symbol)
+                contract: Optional[ContractData] = self.main_engine.get_contract(stop_order.vt_symbol)
 
                 vt_orderids: list = self.send_limit_order(
                     strategy,
@@ -445,7 +445,7 @@ class CtaEngine(BaseEngine):
         """
         Cancel existing order by vt_orderid.
         """
-        order: OrderData = self.main_engine.get_order(vt_orderid)
+        order: Optional[OrderData] = self.main_engine.get_order(vt_orderid)
         if not order:
             self.write_log(f"撤单失败，找不到委托{vt_orderid}", strategy)
             return
@@ -488,7 +488,7 @@ class CtaEngine(BaseEngine):
     ) -> list:
         """
         """
-        contract: ContractData = self.main_engine.get_contract(strategy.vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
         if not contract:
             self.write_log(f"委托失败，找不到合约：{strategy.vt_symbol}", strategy)
             return ""
@@ -538,7 +538,7 @@ class CtaEngine(BaseEngine):
         """
         Return contract pricetick data.
         """
-        contract: ContractData = self.main_engine.get_contract(strategy.vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
 
         if contract:
             return contract.pricetick
@@ -562,7 +562,7 @@ class CtaEngine(BaseEngine):
         # Pass gateway and datafeed if use_database set to True
         if not use_database:
             # Query bars from gateway if available
-            contract: ContractData = self.main_engine.get_contract(vt_symbol)
+            contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
 
             if contract and contract.history_data:
                 req: HistoryRequest = HistoryRequest(
@@ -693,7 +693,7 @@ class CtaEngine(BaseEngine):
                     setattr(strategy, name, value)
 
         # Subscribe market data
-        contract: ContractData = self.main_engine.get_contract(strategy.vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
         if contract:
             req: SubscribeRequest = SubscribeRequest(
                 symbol=contract.symbol, exchange=contract.exchange)
