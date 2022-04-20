@@ -75,12 +75,12 @@ class BacktestingEngine:
         self.active_limit_orders: Dict[str, OrderData] = {}
 
         self.trade_count: int = 0
-        self.trades = {}
+        self.trades: Dict[str, TradeData] = {}
 
-        self.logs = []
+        self.logs: list = []
 
-        self.daily_results = {}
-        self.daily_df = None
+        self.daily_results: Dict[date, DailyResult] = {}
+        self.daily_df: DataFrame = None
 
     def clear_data(self) -> None:
         """
@@ -172,7 +172,7 @@ class BacktestingEngine:
         progress = 0
 
         while start < self.end:
-            progress_bar = "#" * int(progress * 10 + 1)
+            progress_bar: str = "#" * int(progress * 10 + 1)
             self.output(f"加载进度：{progress_bar} [{progress:.0%}]")
 
             end: datetime = min(end, self.end)  # Make sure end time stays within set range
@@ -258,7 +258,7 @@ class BacktestingEngine:
                     return
 
             progress = min(ix / 10, 1)
-            progress_bar = "=" * (ix + 1)
+            progress_bar: str = "=" * (ix + 1)
             self.output(f"回放进度：{progress_bar} [{progress:.0%}]")
 
         self.strategy.on_stop()

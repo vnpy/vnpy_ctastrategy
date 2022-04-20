@@ -21,15 +21,15 @@ from .rollover import RolloverTool
 class CtaManager(QtWidgets.QWidget):
     """"""
 
-    signal_log = QtCore.pyqtSignal(Event)
-    signal_strategy = QtCore.pyqtSignal(Event)
+    signal_log: QtCore.pyqtSignal = QtCore.pyqtSignal(Event)
+    signal_strategy: QtCore.pyqtSignal = QtCore.pyqtSignal(Event)
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
         super(CtaManager, self).__init__()
 
         self.main_engine: MainEngine = main_engine
         self.event_engine: EventEngine = event_engine
-        self.cta_engine: BaseEngine = main_engine.get_engine(APP_NAME)
+        self.cta_engine: CtaEngine = main_engine.get_engine(APP_NAME)
 
         self.managers: StrategyManager = {}
 

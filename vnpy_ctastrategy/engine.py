@@ -1,5 +1,3 @@
-""""""
-
 import importlib
 import traceback
 from collections import defaultdict
@@ -98,7 +96,7 @@ class CtaEngine(BaseEngine):
             set)                    # strategy_name: orderid list
 
         self.stop_order_count: int = 0   # for generating stop_orderid
-        self.stop_orders: dict = {}       # stop_orderid: stop_order
+        self.stop_orders: Dict[str, StopOrder] = {}       # stop_orderid: stop_order
 
         self.init_executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1)
 
@@ -112,8 +110,7 @@ class CtaEngine(BaseEngine):
         self.datafeed: BaseDatafeed = get_datafeed()
 
     def init_engine(self) -> None:
-        """
-        """
+        """"""
         self.init_datafeed()
         self.load_strategy_class()
         self.load_strategy_setting()
@@ -808,7 +805,7 @@ class CtaEngine(BaseEngine):
         for suffix in ["py", "pyd", "so"]:
             pathname: str = str(path.joinpath(f"*.{suffix}"))
             for filepath in glob(pathname):
-                filename: str = Path(filepath).stem
+                filename = Path(filepath).stem
                 name: str = f"{module_name}.{filename}"
                 self.load_strategy_class_from_module(name)
 
