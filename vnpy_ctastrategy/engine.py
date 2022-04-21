@@ -173,7 +173,7 @@ class CtaEngine(BaseEngine):
 
         self.offset_converter.update_order(order)
 
-        strategy: type = self.orderid_strategy_map.get(order.vt_orderid, None)
+        strategy: Optional[type] = self.orderid_strategy_map.get(order.vt_orderid, None)
         if not strategy:
             return
 
@@ -212,7 +212,7 @@ class CtaEngine(BaseEngine):
 
         self.offset_converter.update_trade(trade)
 
-        strategy = self.orderid_strategy_map.get(trade.vt_orderid, None)
+        strategy: Optional[type] = self.orderid_strategy_map.get(trade.vt_orderid, None)
         if not strategy:
             return
 
@@ -457,7 +457,7 @@ class CtaEngine(BaseEngine):
         """
         Cancel a local stop order.
         """
-        stop_order: StopOrder = self.stop_orders.get(stop_orderid, None)
+        stop_order: Optional[StopOrder] = self.stop_orders.get(stop_orderid, None)
         if not stop_order:
             return
         strategy: type = self.strategies[stop_order.strategy_name]
@@ -637,7 +637,7 @@ class CtaEngine(BaseEngine):
             self.write_log(f"创建策略失败，存在重名{strategy_name}")
             return
 
-        strategy_class: type = self.classes.get(class_name, None)
+        strategy_class: Optional[type] = self.classes.get(class_name, None)
         if not strategy_class:
             self.write_log(f"创建策略失败，找不到策略类{class_name}")
             return
@@ -685,7 +685,7 @@ class CtaEngine(BaseEngine):
         self.call_strategy_func(strategy, strategy.on_init)
 
         # Restore strategy data(variables)
-        data: dict = self.strategy_data.get(strategy_name, None)
+        data: Optional[dict] = self.strategy_data.get(strategy_name, None)
         if data:
             for name in strategy.variables:
                 value = data.get(name, None)

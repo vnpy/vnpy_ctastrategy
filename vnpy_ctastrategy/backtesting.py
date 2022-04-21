@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from typing import Callable, List, Dict
+from typing import Callable, List, Dict, Optional
 from functools import lru_cache, partial
 import traceback
 
@@ -571,7 +571,7 @@ class BacktestingEngine:
         """"""
         d: date = self.datetime.date()
 
-        daily_result: DailyResult = self.daily_results.get(d, None)
+        daily_result: Optional[DailyResult] = self.daily_results.get(d, None)
         if daily_result:
             daily_result.close_price = price
         else:
