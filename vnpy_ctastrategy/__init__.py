@@ -43,10 +43,10 @@ except importlib_metadata.PackageNotFoundError:
 class CtaStrategyApp(BaseApp):
     """"""
 
-    app_name = APP_NAME
-    app_module = __module__
-    app_path = Path(__file__).parent
-    display_name = "CTA策略"
-    engine_class = CtaEngine
-    widget_name = "CtaManager"
-    icon_name = str(app_path.joinpath("ui", "cta.ico"))
+    app_name: str = APP_NAME
+    app_module: str = __module__
+    app_path: Path = Path(__file__).parent
+    display_name: str = "CTA策略"
+    engine_class: CtaEngine = CtaEngine
+    widget_name: str = "CtaManager"
+    icon_name: str = str(app_path.joinpath("ui", "cta.ico"))

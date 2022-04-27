@@ -1,6 +1,6 @@
 from datetime import datetime
 from time import sleep
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 from copy import copy
 
 from vnpy.trader.engine import MainEngine
@@ -34,75 +34,75 @@ class RolloverTool(QtWidgets.QDialog):
         """"""
         self.setWindowTitle("移仓助手")
 
-        old_symbols = []
+        old_symbols: list = []
         for vt_symbol, strategies in self.cta_engine.symbol_strategy_map.items():
             if strategies:
                 old_symbols.append(vt_symbol)
-        self.old_symbol_combo = QtWidgets.QComboBox()
+        self.old_symbol_combo: QtWidgets.QComboBox = QtWidgets.QComboBox()
         self.old_symbol_combo.addItems(old_symbols)
 
-        self.new_symbol_line = QtWidgets.QLineEdit()
+        self.new_symbol_line: QtWidgets.QLineEdit = QtWidgets.QLineEdit()
 
-        self.payup_spin = QtWidgets.QSpinBox()
+        self.payup_spin: QtWidgets.QSpinBox = QtWidgets.QSpinBox()
         self.payup_spin.setMinimum(5)
 
-        self.max_volume_spin = QtWidgets.QSpinBox()
+        self.max_volume_spin: QtWidgets.QSpinBox = QtWidgets.QSpinBox()
         self.max_volume_spin.setMinimum(1)
         self.max_volume_spin.setMaximum(10000)
         self.max_volume_spin.setValue(100)
 
-        self.log_edit = QtWidgets.QTextEdit()
+        self.log_edit: QtWidgets.QTextEdit = QtWidgets.QTextEdit()
         self.log_edit.setReadOnly(True)
         self.log_edit.setMinimumWidth(500)
 
-        button = QtWidgets.QPushButton("移仓")
+        button: QtWidgets.QPushButton = QtWidgets.QPushButton("移仓")
         button.clicked.connect(self.roll_all)
         button.setFixedHeight(button.sizeHint().height() * 2)
 
-        form = QtWidgets.QFormLayout()
+        form: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
         form.addRow("移仓合约", self.old_symbol_combo)
         form.addRow("目标合约", self.new_symbol_line)
         form.addRow("委托超价", self.payup_spin)
         form.addRow("单笔上限", self.max_volume_spin)
         form.addRow(button)
 
-        hbox = QtWidgets.QHBoxLayout()
+        hbox: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         hbox.addLayout(form)
         hbox.addWidget(self.log_edit)
         self.setLayout(hbox)
 
     def write_log(self, text: str) -> None:
         """"""
-        now = datetime.now()
-        text = now.strftime("%H:%M:%S\t") + text
+        now: datetime = datetime.now()
+        text: str = now.strftime("%H:%M:%S\t") + text
         self.log_edit.append(text)
 
     def subscribe(self, vt_symbol: str) -> None:
         """"""
-        contract = self.main_engine.get_contract(vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
         if not contract:
             return
 
-        req = SubscribeRequest(contract.symbol, contract.exchange)
+        req: SubscribeRequest = SubscribeRequest(contract.symbol, contract.exchange)
         self.main_engine.subscribe(req, contract.gateway_name)
 
     def roll_all(self) -> None:
         """"""
-        old_symbol = self.old_symbol_combo.currentText()
+        old_symbol: str = self.old_symbol_combo.currentText()
 
-        new_symbol = self.new_symbol_line.text()
+        new_symbol: str = self.new_symbol_line.text()
         self.subscribe(new_symbol)
         sleep(1)
 
-        new_tick = self.main_engine.get_tick(new_symbol)
+        new_tick: Optional[TickData] = self.main_engine.get_tick(new_symbol)
         if not new_tick:
             self.write_log(f"无法获取目标合约{new_symbol}的盘口数据，请先订阅行情")
             return
 
-        payup = self.payup_spin.value()
+        payup: int = self.payup_spin.value()
 
         # Check all strategies inited (pos data loaded from disk json file) and not trading
-        strategies = self.cta_engine.symbol_strategy_map[old_symbol]
+        strategies: list = self.cta_engine.symbol_strategy_map[old_symbol]
         for strategy in strategies:
             if not strategy.inited:
                 self.write_log(f"策略{strategy.strategy_name}尚未初始化，无法执行移仓")
@@ -124,12 +124,12 @@ class RolloverTool(QtWidgets.QDialog):
 
     def roll_position(self, old_symbol: str, new_symbol: str, payup: int) -> None:
         """"""
-        converter = self.cta_engine.offset_converter
+        converter: OffsetConverter = self.cta_engine.offset_converter
         holding: PositionHolding = converter.get_position_holding(old_symbol)
 
         # Roll long position
         if holding.long_pos:
-            volume = holding.long_pos
+            volume: float = holding.long_pos
 
             self.send_order(
                 old_symbol,
@@ -149,7 +149,7 @@ class RolloverTool(QtWidgets.QDialog):
 
         # Roll short postiion
         if holding.short_pos:
-            volume = holding.short_pos
+            volume: float = holding.short_pos
 
             self.send_order(
                 old_symbol,
@@ -174,11 +174,11 @@ class RolloverTool(QtWidgets.QDialog):
 
         # Save data of old strategy
         pos = strategy.pos
-        name = strategy.strategy_name
-        parameters = strategy.get_parameters()
+        name: str = strategy.strategy_name
+        parameters: dict = strategy.get_parameters()
 
         # Remove old strategy
-        result = self.cta_engine.remove_strategy(name)
+        result: bool = self.cta_engine.remove_strategy(name)
         if result:
             self.cta_manager.remove_strategy(name)
 
@@ -210,14 +210,14 @@ class RolloverTool(QtWidgets.QDialog):
         offset: Offset,
         payup: int,
         volume: float,
-    ):
+    ) -> None:
         """
         Send a new order to server.
         """
         max_volume: int = self.max_volume_spin.value()
 
-        contract: ContractData = self.main_engine.get_contract(vt_symbol)
-        tick: TickData = self.main_engine.get_tick(vt_symbol)
+        contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
+        tick: Optional[TickData] = self.main_engine.get_tick(vt_symbol)
         offset_converter: OffsetConverter = self.cta_engine.offset_converter
 
         if direction == Direction.LONG:
@@ -239,18 +239,18 @@ class RolloverTool(QtWidgets.QDialog):
                 reference=f"{APP_NAME}_Rollover"
             )
 
-            req_list = offset_converter.convert_order_request(original_req, False, False)
+            req_list: List[OrderRequest] = offset_converter.convert_order_request(original_req, False, False)
 
-            vt_orderids = []
+            vt_orderids: list = []
             for req in req_list:
-                vt_orderid = self.main_engine.send_order(req, contract.gateway_name)
+                vt_orderid: str = self.main_engine.send_order(req, contract.gateway_name)
                 if not vt_orderid:
                     continue
 
                 vt_orderids.append(vt_orderid)
                 offset_converter.update_order_request(req, vt_orderid)
 
-                msg = f"发出委托{vt_symbol}，{direction.value} {offset.value}，{volume}@{price}"
+                msg: str = f"发出委托{vt_symbol}，{direction.value} {offset.value}，{volume}@{price}"
                 self.write_log(msg)
 
             # Check whether all volume sent
