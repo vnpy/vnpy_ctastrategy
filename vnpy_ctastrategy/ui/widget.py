@@ -103,9 +103,9 @@ class CtaManager(QtWidgets.QWidget):
 
     def update_class_combo(self) -> None:
         """"""
-        self.class_combo.addItems(
-            self.cta_engine.get_all_strategy_class_names()
-        )
+        names = self.cta_engine.get_all_strategy_class_names()
+        names.sort()
+        self.class_combo.addItems(names)
 
     def register_event(self) -> None:
         """"""
