@@ -1,11 +1,11 @@
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from typing import Callable, List, Dict, Optional
+from typing import Callable, List, Dict, Optional, Type
 from functools import lru_cache, partial
 import traceback
 
 import numpy as np
-from pandas import DataFrame
+from pandas import DataFrame, Series
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -55,8 +55,8 @@ class BacktestingEngine:
         self.mode: BacktestingMode = BacktestingMode.BAR
         self.inverse: bool = False
 
-        self.strategy_class: type = None
-        self.strategy: type = None
+        self.strategy_class: Type[CtaTemplate] = None
+        self.strategy: CtaTemplate = None
         self.tick: TickData
         self.bar: BarData
         self.datetime: datetime = None
@@ -141,7 +141,7 @@ class BacktestingEngine:
         self.risk_free = risk_free
         self.annual_days = annual_days
 
-    def add_strategy(self, strategy_class: type, setting: dict) -> None:
+    def add_strategy(self, strategy_class: Type[CtaTemplate], setting: dict) -> None:
         """"""
         self.strategy_class = strategy_class
         self.strategy = strategy_class(
@@ -348,7 +348,7 @@ class BacktestingEngine:
             df["balance"] = df["net_pnl"].cumsum() + self.capital
 
             # When balance falls below 0, set daily return to 0
-            pre_balance: float = df["balance"].shift(1)
+            pre_balance: Series = df["balance"].shift(1)
             pre_balance.iloc[0] = self.capital
             x = df["balance"] / pre_balance
             x[x <= 0] = np.nan

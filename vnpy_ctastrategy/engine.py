@@ -3,12 +3,13 @@ import traceback
 from collections import defaultdict
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Type
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
 from tzlocal import get_localzone
 from glob import glob
+from concurrent.futures import Future
 
 from vnpy.event import Event, EventEngine
 from vnpy.trader.engine import BaseEngine, MainEngine
@@ -250,7 +251,7 @@ class CtaEngine(BaseEngine):
             )
 
             if long_triggered or short_triggered:
-                strategy: type = self.strategies[stop_order.strategy_name]
+                strategy: CtaTemplate = self.strategies[stop_order.strategy_name]
 
                 # To get excuted immediately after stop order is
                 # triggered, use limit price if available, otherwise
@@ -460,7 +461,7 @@ class CtaEngine(BaseEngine):
         stop_order: Optional[StopOrder] = self.stop_orders.get(stop_orderid, None)
         if not stop_order:
             return
-        strategy: type = self.strategies[stop_order.strategy_name]
+        strategy: CtaTemplate = self.strategies[stop_order.strategy_name]
 
         # Remove from relation map.
         self.stop_orders.pop(stop_orderid)
@@ -637,7 +638,7 @@ class CtaEngine(BaseEngine):
             self.write_log(f"创建策略失败，存在重名{strategy_name}")
             return
 
-        strategy_class: Optional[type] = self.classes.get(class_name, None)
+        strategy_class: Optional[Type[CtaTemplate]] = self.classes.get(class_name, None)
         if not strategy_class:
             self.write_log(f"创建策略失败，找不到策略类{class_name}")
             return
@@ -651,7 +652,7 @@ class CtaEngine(BaseEngine):
             self.write_log("创建策略失败，本地代码的交易所后缀不正确")
             return
 
-        strategy: type = strategy_class(self, strategy_name, vt_symbol, setting)
+        strategy: CtaTemplate = strategy_class(self, strategy_name, vt_symbol, setting)
         self.strategies[strategy_name] = strategy
 
         # Add vt_symbol to strategy map.
@@ -663,7 +664,7 @@ class CtaEngine(BaseEngine):
 
         self.put_strategy_event(strategy)
 
-    def init_strategy(self, strategy_name: str) -> None:
+    def init_strategy(self, strategy_name: str) -> Future:
         """
         Init a strategy.
         """
@@ -673,7 +674,7 @@ class CtaEngine(BaseEngine):
         """
         Init strategies in queue.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
 
         if strategy.inited:
             self.write_log(f"{strategy_name}已经完成初始化，禁止重复操作")
@@ -710,7 +711,7 @@ class CtaEngine(BaseEngine):
         """
         Start a strategy.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
         if not strategy.inited:
             self.write_log(f"策略{strategy.strategy_name}启动失败，请先初始化")
             return
@@ -728,7 +729,7 @@ class CtaEngine(BaseEngine):
         """
         Stop a strategy.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
         if not strategy.trading:
             return
 
@@ -751,7 +752,7 @@ class CtaEngine(BaseEngine):
         """
         Edit parameters of a strategy.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
         strategy.update_setting(setting)
 
         self.update_strategy_setting(strategy_name, setting)
@@ -761,7 +762,7 @@ class CtaEngine(BaseEngine):
         """
         Remove a strategy.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
         if strategy.trading:
             self.write_log(f"策略{strategy.strategy_name}移除失败，请先停止")
             return
@@ -854,7 +855,7 @@ class CtaEngine(BaseEngine):
         """
         Get default parameters of a strategy class.
         """
-        strategy_class: type = self.classes[class_name]
+        strategy_class: Type[CtaTemplate] = self.classes[class_name]
 
         parameters: dict = {}
         for name in strategy_class.parameters:
@@ -866,13 +867,13 @@ class CtaEngine(BaseEngine):
         """
         Get parameters of a strategy.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
         return strategy.get_parameters()
 
-    def init_all_strategies(self) -> None:
+    def init_all_strategies(self) -> Dict[str, Future]:
         """
         """
-        futures = {}
+        futures: Dict[str, Future] = {}
         for strategy_name in self.strategies.keys():
             futures[strategy_name] = self.init_strategy(strategy_name)
         return futures
@@ -907,7 +908,7 @@ class CtaEngine(BaseEngine):
         """
         Update setting file.
         """
-        strategy: type = self.strategies[strategy_name]
+        strategy: CtaTemplate = self.strategies[strategy_name]
 
         self.strategy_setting[strategy_name] = {
             "class_name": strategy.__class__.__name__,
