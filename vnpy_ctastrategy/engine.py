@@ -10,7 +10,7 @@ from copy import copy
 from tzlocal import get_localzone
 from glob import glob
 from concurrent.futures import Future
-
+import threading
 from vnpy.event import Event, EventEngine
 from vnpy.trader.engine import BaseEngine, MainEngine
 from vnpy.trader.object import (
@@ -109,6 +109,7 @@ class CtaEngine(BaseEngine):
 
         self.database: BaseDatabase = get_database()
         self.datafeed: BaseDatafeed = get_datafeed()
+        self.sync_strategy_data_lock = threading.Lock()
 
     def init_engine(self) -> None:
         """"""
@@ -841,8 +842,9 @@ class CtaEngine(BaseEngine):
         data: dict = strategy.get_variables()
         data.pop("inited")      # Strategy status (inited, trading) should not be synced.
         data.pop("trading")
-
+        self.sync_strategy_data_lock.acquire()
         self.strategy_data[strategy.strategy_name] = data
+        self.sync_strategy_data_lock.release()
         save_json(self.data_filename, self.strategy_data)
 
     def get_all_strategy_class_names(self) -> list:
