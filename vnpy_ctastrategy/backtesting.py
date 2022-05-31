@@ -53,7 +53,6 @@ class BacktestingEngine:
         self.risk_free: float = 0
         self.annual_days: int = 240
         self.mode: BacktestingMode = BacktestingMode.BAR
-        self.inverse: bool = False
 
         self.strategy_class: Type[CtaTemplate] = None
         self.strategy: CtaTemplate = None
@@ -117,7 +116,6 @@ class BacktestingEngine:
         capital: int = 0,
         end: datetime = None,
         mode: BacktestingMode = BacktestingMode.BAR,
-        inverse: bool = False,
         risk_free: float = 0,
         annual_days: int = 240
     ) -> None:
@@ -137,7 +135,6 @@ class BacktestingEngine:
         self.capital = capital
         self.end = end
         self.mode = mode
-        self.inverse = inverse
         self.risk_free = risk_free
         self.annual_days = annual_days
 
@@ -288,8 +285,7 @@ class BacktestingEngine:
                 start_pos,
                 self.size,
                 self.rate,
-                self.slippage,
-                self.inverse
+                self.slippage
             )
 
             pre_close = daily_result.close_price
@@ -987,8 +983,7 @@ class DailyResult:
         start_pos: float,
         size: int,
         rate: float,
-        slippage: float,
-        inverse: bool
+        slippage: float
     ) -> None:
         """"""
         # If no pre_close provided on the first day,
@@ -1002,12 +997,8 @@ class DailyResult:
         self.start_pos = start_pos
         self.end_pos = start_pos
 
-        if not inverse:     # For normal contract
-            self.holding_pnl = self.start_pos * \
-                (self.close_price - self.pre_close) * size
-        else:               # For inverse contract
-            self.holding_pnl = self.start_pos * \
-                (1 / self.pre_close - 1 / self.close_price) * size
+        self.holding_pnl = self.start_pos * \
+            (self.close_price - self.pre_close) * size
 
         # Trading pnl is the pnl from new trade during the day
         self.trade_count = len(self.trades)
@@ -1020,18 +1011,10 @@ class DailyResult:
 
             self.end_pos += pos_change
 
-            # For normal contract
-            if not inverse:
-                turnover: float = trade.volume * size * trade.price
-                self.trading_pnl += pos_change * \
-                    (self.close_price - trade.price) * size
-                self.slippage += trade.volume * size * slippage
-            # For inverse contract
-            else:
-                turnover: float = trade.volume * size / trade.price
-                self.trading_pnl += pos_change * \
-                    (1 / trade.price - 1 / self.close_price) * size
-                self.slippage += trade.volume * size * slippage / (trade.price ** 2)
+            turnover: float = trade.volume * size * trade.price
+            self.trading_pnl += pos_change * \
+                (self.close_price - trade.price) * size
+            self.slippage += trade.volume * size * slippage
 
             self.turnover += turnover
             self.commission += turnover * rate
@@ -1085,7 +1068,6 @@ def evaluate(
     capital: int,
     end: datetime,
     mode: BacktestingMode,
-    inverse: bool,
     setting: dict
 ) -> tuple:
     """
@@ -1103,8 +1085,7 @@ def evaluate(
         pricetick=pricetick,
         capital=capital,
         end=end,
-        mode=mode,
-        inverse=inverse
+        mode=mode
     )
 
     engine.add_strategy(strategy_class, setting)
@@ -1134,8 +1115,7 @@ def wrap_evaluate(engine: BacktestingEngine, target_name: str) -> callable:
         engine.pricetick,
         engine.capital,
         engine.end,
-        engine.mode,
-        engine.inverse
+        engine.mode
     )
     return func
 
