@@ -402,7 +402,10 @@ class BacktestingEngine:
             else:
                 sharpe_ratio: float = 0
 
-            return_drawdown_ratio: float = -total_return / max_ddpercent
+            if max_ddpercent:
+                return_drawdown_ratio: float = -total_return / max_ddpercent
+            else:
+                return_drawdown_ratio = 0
 
         # Output
         if output:
