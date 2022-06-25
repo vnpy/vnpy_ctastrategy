@@ -1,3 +1,6 @@
+from asyncio import ensure_future
+from typing import Dict
+
 from vnpy.event import Event, EventEngine
 from vnpy.trader.engine import MainEngine
 from vnpy.trader.ui import QtCore, QtGui, QtWidgets
@@ -25,13 +28,14 @@ class CtaManager(QtWidgets.QWidget):
     signal_strategy: QtCore.Signal = QtCore.Signal(Event)
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
-        super(CtaManager, self).__init__()
+        """"""
+        super().__init__()
 
         self.main_engine: MainEngine = main_engine
         self.event_engine: EventEngine = event_engine
         self.cta_engine: CtaEngine = main_engine.get_engine(APP_NAME)
 
-        self.managers: StrategyManager = {}
+        self.managers: Dict[str, StrategyManager] = {}
 
         self.init_ui()
         self.register_event()
@@ -69,9 +73,9 @@ class CtaManager(QtWidgets.QWidget):
         scroll_widget: QtWidgets.QWidget = QtWidgets.QWidget()
         scroll_widget.setLayout(self.scroll_layout)
 
-        scroll_area: QtWidgets.QScrollArea = QtWidgets.QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(scroll_widget)
+        self.scroll_area: QtWidgets.QScrollArea = QtWidgets.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(scroll_widget)
 
         self.log_monitor: LogMonitor = LogMonitor(self.main_engine, self.event_engine)
 
@@ -79,10 +83,18 @@ class CtaManager(QtWidgets.QWidget):
             self.main_engine, self.event_engine
         )
 
+        self.strategy_combo = QtWidgets.QComboBox()
+        self.strategy_combo.setMinimumWidth(200)
+        find_button = QtWidgets.QPushButton("查找")
+        find_button.clicked.connect(self.find_strategy)
+
         # Set layout
         hbox1: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         hbox1.addWidget(self.class_combo)
         hbox1.addWidget(add_button)
+        hbox1.addStretch()
+        hbox1.addWidget(self.strategy_combo)
+        hbox1.addWidget(find_button)
         hbox1.addStretch()
         hbox1.addWidget(init_button)
         hbox1.addWidget(start_button)
@@ -91,7 +103,7 @@ class CtaManager(QtWidgets.QWidget):
         hbox1.addWidget(roll_button)
 
         grid: QtWidgets.QGridLayout = QtWidgets.QGridLayout()
-        grid.addWidget(scroll_area, 0, 0, 2, 1)
+        grid.addWidget(self.scroll_area, 0, 0, 2, 1)
         grid.addWidget(self.stop_order_monitor, 0, 1)
         grid.addWidget(self.log_monitor, 1, 1)
 
@@ -106,6 +118,14 @@ class CtaManager(QtWidgets.QWidget):
         names = self.cta_engine.get_all_strategy_class_names()
         names.sort()
         self.class_combo.addItems(names)
+
+    def update_strategy_combo(self) -> None:
+        """"""
+        names = list(self.managers.keys())
+        names.sort()
+
+        self.strategy_combo.clear()
+        self.strategy_combo.addItems(names)
 
     def register_event(self) -> None:
         """"""
@@ -130,10 +150,14 @@ class CtaManager(QtWidgets.QWidget):
             self.scroll_layout.insertWidget(0, manager)
             self.managers[strategy_name] = manager
 
+            self.update_strategy_combo()
+
     def remove_strategy(self, strategy_name) -> None:
         """"""
         manager: StrategyManager = self.managers.pop(strategy_name)
         manager.deleteLater()
+
+        self.update_strategy_combo()
 
     def add_strategy(self) -> None:
         """"""
@@ -153,6 +177,12 @@ class CtaManager(QtWidgets.QWidget):
             self.cta_engine.add_strategy(
                 class_name, strategy_name, vt_symbol, setting
             )
+
+    def find_strategy(self) -> None:
+        """"""
+        strategy_name = self.strategy_combo.currentText()
+        manager = self.managers[strategy_name]
+        self.scroll_area.ensureWidgetVisible(manager)
 
     def clear_log(self) -> None:
         """"""
