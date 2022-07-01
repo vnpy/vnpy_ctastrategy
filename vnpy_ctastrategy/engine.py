@@ -616,17 +616,22 @@ class CtaEngine(BaseEngine):
         """
         Call function of a strategy and catch any exception raised.
         """
+        status = False
         try:
             if params:
                 func(params)
             else:
                 func()
+            
+            status = True
         except Exception:
             strategy.trading = False
             strategy.inited = False
 
             msg: str = f"触发异常已停止\n{traceback.format_exc()}"
             self.write_log(msg, strategy)
+
+        return status
 
     def add_strategy(
         self, class_name: str, strategy_name: str, vt_symbol: str, setting: dict
@@ -683,8 +688,9 @@ class CtaEngine(BaseEngine):
         self.write_log(f"{strategy_name}开始执行初始化")
 
         # Call on_init function of strategy
-        self.call_strategy_func(strategy, strategy.on_init)
-
+        status = self.call_strategy_func(strategy, strategy.on_init)
+        if(status == False):
+            return
         # Restore strategy data(variables)
         data: Optional[dict] = self.strategy_data.get(strategy_name, None)
         if data:
