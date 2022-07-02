@@ -616,17 +616,23 @@ class CtaEngine(BaseEngine):
         """
         Call function of a strategy and catch any exception raised.
         """
+        status = False
         try:
             if params:
                 func(params)
             else:
                 func()
+            
+            status = True
         except Exception:
             strategy.trading = False
             strategy.inited = False
 
             msg: str = f"触发异常已停止\n{traceback.format_exc()}"
             self.write_log(msg, strategy)
+            self.put_strategy_event(strategy)
+            
+        return status
 
     def add_strategy(
         self, class_name: str, strategy_name: str, vt_symbol: str, setting: dict
@@ -664,6 +670,8 @@ class CtaEngine(BaseEngine):
 
         self.put_strategy_event(strategy)
 
+        self.write_log(f"策略{strategy.strategy_name}添加成功")
+
     def init_strategy(self, strategy_name: str) -> Future:
         """
         Init a strategy.
@@ -683,8 +691,9 @@ class CtaEngine(BaseEngine):
         self.write_log(f"{strategy_name}开始执行初始化")
 
         # Call on_init function of strategy
-        self.call_strategy_func(strategy, strategy.on_init)
-
+        status = self.call_strategy_func(strategy, strategy.on_init)
+        if(status == False):
+            return
         # Restore strategy data(variables)
         data: Optional[dict] = self.strategy_data.get(strategy_name, None)
         if data:
@@ -788,6 +797,39 @@ class CtaEngine(BaseEngine):
 
         self.write_log(f"策略{strategy.strategy_name}移除移除成功")
         return True
+
+    def reload_strategy(self, strategy_name: str) -> bool:
+        '''
+        reload strategy class
+        - 在非交易状态下都可使用 硬重载 按钮重新加载策略类。
+        - 使用该策略类的所有策略实例都会被重新加载
+        '''
+        strategy_class: CtaTemplate = self.strategies[strategy_name]
+        
+        has_another_inst: bool = False
+        for strategy_key, strategy_val in self.strategies.items():
+            if strategy_class.__module__ == strategy_val.__module__ and strategy_val.trading is True:
+                has_another_inst = True
+                self.write_log(f"发现有相同策略类的其它实例正在运行，请停止后重试: {strategy_key}")
+        if has_another_inst is True:
+            return
+
+        # reload strategy module
+        self.load_strategy_class_from_module(strategy_class.__module__)
+        
+        # re-create strategy instances
+        strtegies_copy = self.strategies.copy()
+        for strategy_key, strategy_val in strtegies_copy.items():
+            if strategy_class.__module__ == strategy_val.__module__:
+                strategy_config = self.strategy_setting[strategy_key]
+                self.remove_strategy(strategy_key)
+                self.add_strategy(strategy_config["class_name"],
+                                 strategy_key,
+                                 strategy_config["vt_symbol"],
+                                 strategy_config["setting"])
+
+                strategy = self.strategies[strategy_key]
+                self.put_strategy_event(strategy)
 
     def load_strategy_class(self) -> None:
         """
