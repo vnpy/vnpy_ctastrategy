@@ -630,7 +630,8 @@ class CtaEngine(BaseEngine):
 
             msg: str = f"触发异常已停止\n{traceback.format_exc()}"
             self.write_log(msg, strategy)
-
+            self.put_strategy_event(strategy)
+            
         return status
 
     def add_strategy(
@@ -800,11 +801,10 @@ class CtaEngine(BaseEngine):
     def reload_strategy(self, strategy_name: str) -> bool:
         '''
         reload strategy class
+        - 在非交易状态下都可使用 硬重载 按钮重新加载策略类。
+        - 使用该策略类的所有策略实例都会被重新加载
         '''
         strategy_class: CtaTemplate = self.strategies[strategy_name]
-        if not strategy_class.inited:
-            self.write_log(f"{strategy_class.__module__} 还未进行过初始化")
-            return
         
         has_another_inst: bool = False
         for strategy_key, strategy_val in self.strategies.items():

@@ -240,8 +240,8 @@ class StrategyManager(QtWidgets.QFrame):
         self.remove_button: QtWidgets.QPushButton = QtWidgets.QPushButton("移除")
         self.remove_button.clicked.connect(self.remove_strategy)
 
-        self.remove_button: QtWidgets.QPushButton = QtWidgets.QPushButton("硬重载")
-        self.remove_button.clicked.connect(self.reload_strategy)
+        self.reload_button: QtWidgets.QPushButton = QtWidgets.QPushButton("硬重载")
+        self.reload_button.clicked.connect(self.reload_strategy)
 
         strategy_name: str = self._data["strategy_name"]
         vt_symbol: str = self._data["vt_symbol"]
@@ -263,6 +263,7 @@ class StrategyManager(QtWidgets.QFrame):
         hbox.addWidget(self.stop_button)
         hbox.addWidget(self.edit_button)
         hbox.addWidget(self.remove_button)
+        hbox.addWidget(self.reload_button)
 
         vbox: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         vbox.addWidget(label)
@@ -284,7 +285,14 @@ class StrategyManager(QtWidgets.QFrame):
         trading: bool = variables["trading"]
 
         if not inited:
+            # init or for strategy crashed
+            self.init_button.setEnabled(True)
+            self.start_button.setEnabled(False)
+            self.stop_button.setEnabled(False)
+            self.edit_button.setEnabled(True)
+            self.remove_button.setEnabled(True)
             return
+            
         self.init_button.setEnabled(False)
 
         if trading:
