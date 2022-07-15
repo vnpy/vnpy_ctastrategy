@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Type
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
-from tzlocal import get_localzone
+from tzlocal import get_localzone_name
 from glob import glob
 from concurrent.futures import Future
 
@@ -40,7 +40,7 @@ from vnpy.trader.constant import (
     Offset,
     Status
 )
-from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to
+from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to, ZoneInfo
 from vnpy.trader.converter import OffsetConverter
 from vnpy.trader.database import BaseDatabase, get_database
 from vnpy.trader.datafeed import BaseDatafeed, get_datafeed
@@ -68,7 +68,7 @@ STOP_STATUS_MAP: Dict[Status, StopOrderStatus] = {
     Status.REJECTED: StopOrderStatus.CANCELLED
 }
 
-LOCAL_TZ = get_localzone()
+LOCAL_TZ = ZoneInfo(get_localzone_name())
 
 
 class CtaEngine(BaseEngine):
