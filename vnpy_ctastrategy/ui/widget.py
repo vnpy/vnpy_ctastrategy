@@ -1,4 +1,3 @@
-from asyncio import ensure_future
 from typing import Dict
 
 from vnpy.event import Event, EventEngine
