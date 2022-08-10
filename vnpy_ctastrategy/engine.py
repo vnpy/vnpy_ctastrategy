@@ -627,6 +627,7 @@ class CtaEngine(BaseEngine):
 
             msg: str = f"触发异常已停止\n{traceback.format_exc()}"
             self.write_log(msg, strategy)
+            raise
 
     def add_strategy(
         self, class_name: str, strategy_name: str, vt_symbol: str, setting: dict
