@@ -393,9 +393,6 @@ class TargetPosTemplate(CtaTemplate):
         """
         self.last_tick = tick
 
-        if self.trading:
-            self.trade()
-
     @virtual
     def on_bar(self, bar: BarData) -> None:
         """
