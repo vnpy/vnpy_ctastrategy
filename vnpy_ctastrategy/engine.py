@@ -786,7 +786,7 @@ class CtaEngine(BaseEngine):
         # Remove from strategies
         self.strategies.pop(strategy_name)
 
-        self.write_log(f"策略{strategy.strategy_name}移除移除成功")
+        self.write_log(f"策略{strategy.strategy_name}移除成功")
         return True
 
     def load_strategy_class(self) -> None:
