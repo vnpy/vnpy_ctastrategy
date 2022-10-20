@@ -311,35 +311,37 @@ class BacktestingEngine:
         if df is None:
             df: DataFrame = self.daily_df
 
-        # Check for init DataFrame
-        if df is None:
-            # Set all statistics to 0 if no trade.
-            start_date: str = ""
-            end_date: str = ""
-            total_days: int = 0
-            profit_days: int = 0
-            loss_days: int = 0
-            end_balance: float = 0
-            max_drawdown: float = 0
-            max_ddpercent: float = 0
-            max_drawdown_duration: int = 0
-            total_net_pnl: float = 0
-            daily_net_pnl: float = 0
-            total_commission: float = 0
-            daily_commission: float = 0
-            total_slippage: float = 0
-            daily_slippage: float = 0
-            total_turnover: float = 0
-            daily_turnover: float = 0
-            total_trade_count: int = 0
-            daily_trade_count: int = 0
-            total_return: float = 0
-            annual_return: float = 0
-            daily_return: float = 0
-            return_std: float = 0
-            sharpe_ratio: float = 0
-            return_drawdown_ratio: float = 0
-        else:
+        # Init all statistics default value
+        start_date: str = ""
+        end_date: str = ""
+        total_days: int = 0
+        profit_days: int = 0
+        loss_days: int = 0
+        end_balance: float = 0
+        max_drawdown: float = 0
+        max_ddpercent: float = 0
+        max_drawdown_duration: int = 0
+        total_net_pnl: float = 0
+        daily_net_pnl: float = 0
+        total_commission: float = 0
+        daily_commission: float = 0
+        total_slippage: float = 0
+        daily_slippage: float = 0
+        total_turnover: float = 0
+        daily_turnover: float = 0
+        total_trade_count: int = 0
+        daily_trade_count: int = 0
+        total_return: float = 0
+        annual_return: float = 0
+        daily_return: float = 0
+        return_std: float = 0
+        sharpe_ratio: float = 0
+        return_drawdown_ratio: float = 0
+
+        # Check if balance is always positive
+        positive_balance: bool = False
+
+        if df is not None:
             # Calculate balance related time series data
             df["balance"] = df["net_pnl"].cumsum() + self.capital
 
@@ -357,6 +359,13 @@ class BacktestingEngine:
             df["drawdown"] = df["balance"] - df["highlevel"]
             df["ddpercent"] = df["drawdown"] / df["highlevel"] * 100
 
+            # All balance value needs to be positive
+            positive_balance = (df["balance"] > 0).all()
+            if not positive_balance:
+                self.output("回测中出现爆仓（资金小于等于0），无法计算策略统计指标")
+
+        # Calculate statistics value
+        if positive_balance:
             # Calculate statistics value
             start_date = df.index[0]
             end_date = df.index[-1]
