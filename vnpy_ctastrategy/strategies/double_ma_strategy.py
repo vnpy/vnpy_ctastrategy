@@ -64,7 +64,7 @@ class DoubleMaStrategy(CtaTemplate):
         """
         Callback of new bar data update.
         """
-
+        print(bar)
         am = self.am
         am.update_bar(bar)
         if not am.inited:
@@ -83,18 +83,17 @@ class DoubleMaStrategy(CtaTemplate):
 
         if cross_over:
             if self.pos == 0:
-                self.buy(bar.close_price, 1)
+                self.buy(bar.close_price, 200)
             elif self.pos < 0:
-                self.cover(bar.close_price, 1)
-                self.buy(bar.close_price, 1)
+                self.cover(bar.close_price, 200)
+                self.buy(bar.close_price, 200)
 
         elif cross_below:
             if self.pos == 0:
-                self.short(bar.close_price, 1)
+                self.short(bar.close_price, 200)
             elif self.pos > 0:
-                self.sell(bar.close_price, 1)
-                self.short(bar.close_price, 1)
-
+                self.sell(bar.close_price, 200)
+                self.short(bar.close_price, 200)
         self.put_event()
 
     def on_order(self, order: OrderData):

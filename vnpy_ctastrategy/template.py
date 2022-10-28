@@ -2,6 +2,7 @@
 from abc import ABC
 from copy import copy
 from typing import Any, Callable, Dict
+from collections import defaultdict
 
 from vnpy.trader.constant import Interval, Direction, Offset
 from vnpy.trader.object import BarData, TickData, OrderData, TradeData
@@ -350,6 +351,19 @@ class CtaTemplate(ABC):
         """
         if self.trading:
             self.cta_engine.sync_strategy_data(self)
+
+    def get_moment_profit(self, etf_symbol: str):
+        """
+        获取ETF折、溢价瞬时利润
+        折价： 买ETF，赎回成篮子，卖篮子
+        溢价： 买篮子，申购成ETF，卖ETF
+        :param etf_symbol:
+        :return:
+        """
+        return self.cta_engine.main_engine.get_moment_profit(etf_symbol)
+
+    def get_spread(self, spread_name):
+        return self.cta_engine.main_engine.get_spread(spread_name)
 
 
 class CtaSignal(ABC):

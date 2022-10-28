@@ -215,10 +215,16 @@ class CtaEngine(BaseEngine):
             return
 
         # Update strategy pos before calling on_trade method
-        if trade.direction == Direction.LONG:
-            strategy.pos += trade.volume
+        if isinstance(strategy.pos, dict):
+            if trade.direction == Direction.LONG:
+                strategy.pos[trade.vt_symbol] = strategy.pos[trade.vt_symbol] + trade.volume
+            else:
+                strategy.pos[trade.vt_symbol] = strategy.pos[trade.vt_symbol] - trade.volume
         else:
-            strategy.pos -= trade.volume
+            if trade.direction == Direction.LONG:
+                strategy.pos += trade.volume
+            else:
+                strategy.pos -= trade.volume
 
         self.call_strategy_func(strategy, strategy.on_trade, trade)
 
@@ -333,19 +339,22 @@ class CtaEngine(BaseEngine):
         vt_orderids = []
 
         for req in req_list:
-            vt_orderid = self.main_engine.send_order(req, contract.gateway_name)
-
+            if req.direction in (Direction.BUY_BASKET, Direction.SELL_BASKET):
+                req_l, vt_orderid_l = self.main_engine.send_basket_order(req, contract.gateway_name)
+            else:
+                vt_orderid = self.main_engine.send_order(req, contract.gateway_name)
+                req_l = [req]
+                vt_orderid_l = [vt_orderid[0]]
             # Check if sending order successful
-            if not vt_orderid:
-                continue
+            for rq, vt_o_id in zip(req_l, vt_orderid_l):
+                vt_orderids.append(vt_o_id)
+                if rq is None or vt_o_id is None:
+                    continue
+                self.offset_converter.update_order_request(rq, vt_o_id)
 
-            vt_orderids.append(vt_orderid)
-
-            self.offset_converter.update_order_request(req, vt_orderid)
-
-            # Save relationship between orderid and strategy.
-            self.orderid_strategy_map[vt_orderid] = strategy
-            self.strategy_orderid_map[strategy.strategy_name].add(vt_orderid)
+                # Save relationship between orderid and strategy.
+                self.orderid_strategy_map[vt_o_id] = strategy
+                self.strategy_orderid_map[strategy.strategy_name].add(vt_o_id)
 
         return vt_orderids
 
@@ -493,13 +502,17 @@ class CtaEngine(BaseEngine):
         stop: bool,
         lock: bool,
         net: bool,
-        signal_price
+        signal_price,
+        vt_symbol=None,
+        type=OrderType.LIMIT
     ):
         """
         """
-        contract = self.main_engine.get_contract(strategy.vt_symbol)
+        if vt_symbol is None:
+            vt_symbol = strategy.vt_symbol
+        contract = self.main_engine.get_contract(vt_symbol)
         if not contract:
-            self.write_log(f"委托失败，找不到合约：{strategy.vt_symbol}", strategy)
+            self.write_log(f"委托失败，找不到合约：{vt_symbol}", strategy)
             return ""
 
         # Round order price and volume to nearest incremental value
@@ -515,9 +528,22 @@ class CtaEngine(BaseEngine):
                 return self.send_local_stop_order(
                     strategy, direction, offset, price, volume, lock, net, signal_price
                 )
-        else:
+        elif type == OrderType.LIMIT:
             return self.send_limit_order(
                 strategy, contract, direction, offset, price, volume, lock, net, signal_price
+            )
+        else:
+            return self.send_server_order(
+                strategy=strategy,
+                contract=contract,
+                type=type,
+                price=price,
+                volume=volume,
+                direction=direction,
+                offset=offset,
+                lock=lock,
+                net=net,
+                signal_price=signal_price
             )
 
     def cancel_order(self, strategy: CtaTemplate, vt_orderid: str):
@@ -700,6 +726,10 @@ class CtaEngine(BaseEngine):
         if data:
             for name in strategy.variables:
                 value = data.get(name, None)
+                if isinstance(value, dict):
+                    _value = value
+                    value = defaultdict(lambda: 0)
+                    value.update(_value)
                 if value:
                     setattr(strategy, name, value)
 
