@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Type
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from copy import copy
-from tzlocal import get_localzone_name
 from glob import glob
 from concurrent.futures import Future
 
@@ -40,9 +39,9 @@ from vnpy.trader.constant import (
     Offset,
     Status
 )
-from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to, ZoneInfo
+from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to
 from vnpy.trader.converter import OffsetConverter
-from vnpy.trader.database import BaseDatabase, get_database
+from vnpy.trader.database import BaseDatabase, get_database, DB_TZ
 from vnpy.trader.datafeed import BaseDatafeed, get_datafeed
 
 from .base import (
@@ -67,8 +66,6 @@ STOP_STATUS_MAP: Dict[Status, StopOrderStatus] = {
     Status.CANCELLED: StopOrderStatus.CANCELLED,
     Status.REJECTED: StopOrderStatus.CANCELLED
 }
-
-LOCAL_TZ = ZoneInfo(get_localzone_name())
 
 
 class CtaEngine(BaseEngine):
@@ -427,7 +424,7 @@ class CtaEngine(BaseEngine):
             volume=volume,
             stop_orderid=stop_orderid,
             strategy_name=strategy.strategy_name,
-            datetime=datetime.now(LOCAL_TZ),
+            datetime=datetime.now(DB_TZ),
             lock=lock,
             net=net
         )
@@ -556,7 +553,7 @@ class CtaEngine(BaseEngine):
     ) -> List[BarData]:
         """"""
         symbol, exchange = extract_vt_symbol(vt_symbol)
-        end: datetime = datetime.now(LOCAL_TZ)
+        end: datetime = datetime.now(DB_TZ)
         start: datetime = end - timedelta(days)
         bars: List[BarData] = []
 
@@ -598,7 +595,7 @@ class CtaEngine(BaseEngine):
     ) -> List[TickData]:
         """"""
         symbol, exchange = extract_vt_symbol(vt_symbol)
-        end: datetime = datetime.now(LOCAL_TZ)
+        end: datetime = datetime.now(DB_TZ)
         start: datetime = end - timedelta(days)
 
         ticks: List[TickData] = self.database.load_tick_data(
