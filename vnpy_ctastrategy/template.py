@@ -284,6 +284,12 @@ class CtaTemplate(ABC):
         """
         return self.cta_engine.get_pricetick(self)
 
+    def get_size(self) -> int:
+        """
+        Return size data of trading contract.
+        """
+        return self.cta_engine.get_size(self)
+
     def load_bar(
         self,
         days: int,
