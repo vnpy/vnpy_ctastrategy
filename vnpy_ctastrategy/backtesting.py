@@ -930,6 +930,12 @@ class BacktestingEngine:
         """
         return self.pricetick
 
+    def get_size(self, strategy: CtaTemplate) -> int:
+        """
+        Return contract size data.
+        """
+        return self.size
+
     def put_strategy_event(self, strategy: CtaTemplate) -> None:
         """
         Put an event to update strategy status.
