@@ -23,13 +23,11 @@ from vnpy.trader.object import (
     OrderData,
     TradeData,
     ContractData,
-    PositionData
 )
 from vnpy.trader.event import (
     EVENT_TICK,
     EVENT_ORDER,
-    EVENT_TRADE,
-    EVENT_POSITION
+    EVENT_TRADE
 )
 from vnpy.trader.constant import (
     Direction,
@@ -40,7 +38,6 @@ from vnpy.trader.constant import (
     Status
 )
 from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to
-from vnpy.trader.converter import OffsetConverter
 from vnpy.trader.database import BaseDatabase, get_database, DB_TZ
 from vnpy.trader.datafeed import BaseDatafeed, get_datafeed
 
@@ -78,31 +75,24 @@ class CtaEngine(BaseEngine):
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
         """"""
-        super(CtaEngine, self).__init__(
-            main_engine, event_engine, APP_NAME)
+        super().__init__(main_engine, event_engine, APP_NAME)
 
-        self.strategy_setting: dict = {}  # strategy_name: dict
-        self.strategy_data: dict = {}     # strategy_name: dict
+        self.strategy_setting: dict = {}                                # strategy_name: dict
+        self.strategy_data: dict = {}                                   # strategy_name: dict
 
-        self.classes: dict = {}           # class_name: stategy_class
-        self.strategies: dict = {}        # strategy_name: strategy
+        self.classes: dict = {}                                         # class_name: stategy_class
+        self.strategies: dict = {}                                      # strategy_name: strategy
 
-        self.symbol_strategy_map: defaultdict = defaultdict(
-            list)                   # vt_symbol: strategy list
-        self.orderid_strategy_map: dict = {}  # vt_orderid: strategy
-        self.strategy_orderid_map: defaultdict = defaultdict(
-            set)                    # strategy_name: orderid list
+        self.symbol_strategy_map: defaultdict = defaultdict(list)       # vt_symbol: strategy list
+        self.orderid_strategy_map: dict = {}                            # vt_orderid: strategy
+        self.strategy_orderid_map: defaultdict = defaultdict(set)       # strategy_name: orderid list
 
-        self.stop_order_count: int = 0   # for generating stop_orderid
-        self.stop_orders: Dict[str, StopOrder] = {}       # stop_orderid: stop_order
+        self.stop_order_count: int = 0                                  # for generating stop_orderid
+        self.stop_orders: Dict[str, StopOrder] = {}                     # stop_orderid: stop_order
 
         self.init_executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1)
 
-        self.rq_symbols: set = set()
-
-        self.vt_tradeids: set = set()    # for filtering duplicate trade
-
-        self.offset_converter: OffsetConverter = OffsetConverter(self.main_engine)
+        self.vt_tradeids: set = set()                                   # for filtering duplicate trade
 
         self.database: BaseDatabase = get_database()
         self.datafeed: BaseDatafeed = get_datafeed()
@@ -125,7 +115,6 @@ class CtaEngine(BaseEngine):
         self.event_engine.register(EVENT_TICK, self.process_tick_event)
         self.event_engine.register(EVENT_ORDER, self.process_order_event)
         self.event_engine.register(EVENT_TRADE, self.process_trade_event)
-        self.event_engine.register(EVENT_POSITION, self.process_position_event)
 
     def init_datafeed(self) -> None:
         """
@@ -169,8 +158,6 @@ class CtaEngine(BaseEngine):
         """"""
         order: OrderData = event.data
 
-        self.offset_converter.update_order(order)
-
         strategy: Optional[type] = self.orderid_strategy_map.get(order.vt_orderid, None)
         if not strategy:
             return
@@ -208,8 +195,6 @@ class CtaEngine(BaseEngine):
             return
         self.vt_tradeids.add(trade.vt_tradeid)
 
-        self.offset_converter.update_trade(trade)
-
         strategy: Optional[type] = self.orderid_strategy_map.get(trade.vt_orderid, None)
         if not strategy:
             return
@@ -227,12 +212,6 @@ class CtaEngine(BaseEngine):
 
         # Update GUI
         self.put_strategy_event(strategy)
-
-    def process_position_event(self, event: Event) -> None:
-        """"""
-        position: PositionData = event.data
-
-        self.offset_converter.update_position(position)
 
     def check_stop_order(self, tick: TickData) -> None:
         """"""
@@ -323,7 +302,12 @@ class CtaEngine(BaseEngine):
         )
 
         # Convert with offset converter
-        req_list: List[OrderRequest] = self.offset_converter.convert_order_request(original_req, lock, net)
+        req_list: List[OrderRequest] = self.main_engine.convert_order_request(
+            original_req,
+            contract.gateway_name,
+            lock,
+            net
+        )
 
         # Send Orders
         vt_orderids: list = []
@@ -337,7 +321,7 @@ class CtaEngine(BaseEngine):
 
             vt_orderids.append(vt_orderid)
 
-            self.offset_converter.update_order_request(req, vt_orderid)
+            self.main_engine.update_order_request(req, vt_orderid, contract.gateway_name)
 
             # Save relationship between orderid and strategy.
             self.orderid_strategy_map[vt_orderid] = strategy

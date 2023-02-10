@@ -124,7 +124,8 @@ class RolloverTool(QtWidgets.QDialog):
 
     def roll_position(self, old_symbol: str, new_symbol: str, payup: int) -> None:
         """"""
-        converter: OffsetConverter = self.cta_engine.offset_converter
+        contract: ContractData = self.main_engine.get_contract(old_symbol)
+        converter: OffsetConverter = self.main_engine.get_converter(contract.gateway_name)
         holding: PositionHolding = converter.get_position_holding(old_symbol)
 
         # Roll long position
@@ -218,7 +219,6 @@ class RolloverTool(QtWidgets.QDialog):
 
         contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
         tick: Optional[TickData] = self.main_engine.get_tick(vt_symbol)
-        offset_converter: OffsetConverter = self.cta_engine.offset_converter
 
         if direction == Direction.LONG:
             price = tick.ask_price_1 + contract.pricetick * payup
@@ -239,7 +239,12 @@ class RolloverTool(QtWidgets.QDialog):
                 reference=f"{APP_NAME}_Rollover"
             )
 
-            req_list: List[OrderRequest] = offset_converter.convert_order_request(original_req, False, False)
+            req_list: List[OrderRequest] = self.main_engine.convert_order_request(
+                original_req,
+                contract.gateway_name,
+                False,
+                False
+            )
 
             vt_orderids: list = []
             for req in req_list:
@@ -248,7 +253,7 @@ class RolloverTool(QtWidgets.QDialog):
                     continue
 
                 vt_orderids.append(vt_orderid)
-                offset_converter.update_order_request(req, vt_orderid)
+                self.main_engine.update_order_request(req, vt_orderid, contract.gateway_name)
 
                 msg: str = f"发出委托{vt_symbol}，{direction.value} {offset.value}，{volume}@{price}"
                 self.write_log(msg)

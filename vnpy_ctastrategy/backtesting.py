@@ -1015,8 +1015,7 @@ class DailyResult:
         self.start_pos = start_pos
         self.end_pos = start_pos
 
-        self.holding_pnl = self.start_pos * \
-            (self.close_price - self.pre_close) * size
+        self.holding_pnl = self.start_pos * (self.close_price - self.pre_close) * size
 
         # Trading pnl is the pnl from new trade during the day
         self.trade_count = len(self.trades)
