@@ -120,7 +120,7 @@ class CtaEngine(BaseEngine):
         """
         Init datafeed client.
         """
-        result: bool = self.datafeed.init()
+        result: bool = self.datafeed.init(self.write_log)
         if result:
             self.write_log("数据服务初始化成功")
 
@@ -137,7 +137,7 @@ class CtaEngine(BaseEngine):
             start=start,
             end=end
         )
-        data: List[BarData] = self.datafeed.query_bar_history(req)
+        data: List[BarData] = self.datafeed.query_bar_history(req, self.write_log)
         return data
 
     def process_tick_event(self, event: Event) -> None:
