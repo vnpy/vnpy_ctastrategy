@@ -51,7 +51,7 @@ from .base import (
     StopOrderStatus,
     STOPORDER_PREFIX
 )
-from .template import CtaTemplate
+from .template import CtaTemplate, TargetPosTemplate
 
 
 # 停止单状态映射
@@ -814,7 +814,11 @@ class CtaEngine(BaseEngine):
 
             for name in dir(module):
                 value = getattr(module, name)
-                if (isinstance(value, type) and issubclass(value, CtaTemplate) and value is not CtaTemplate):
+                if (
+                    isinstance(value, type)
+                    and issubclass(value, CtaTemplate)
+                    and value not in {CtaTemplate, TargetPosTemplate}
+                ):
                     self.classes[value.__name__] = value
         except:  # noqa
             msg: str = f"策略文件{module_name}加载失败，触发异常：\n{traceback.format_exc()}"

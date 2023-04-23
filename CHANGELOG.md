@@ -1,3 +1,7 @@
+# 1.1.4版本
+
+1. 加载策略类时，过滤TargetPosTemplate模板
+
 # 1.1.3版本
 
 1. 使用vnpy.trader.database中统一定义的时区来加载数据
