@@ -923,6 +923,9 @@ class CtaEngine(BaseEngine):
         self.strategy_setting.pop(strategy_name)
         save_json(self.setting_filename, self.strategy_setting)
 
+        self.strategy_data.pop(strategy_name, None)
+        save_json(self.data_filename, self.strategy_data)
+
     def put_stop_order_event(self, stop_order: StopOrder) -> None:
         """
         Put an event to update stop order status.
