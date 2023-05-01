@@ -9,11 +9,16 @@ from pandas import DataFrame, Series
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from vnpy.trader.constant import (Direction, Offset, Exchange,
-                                  Interval, Status)
+from vnpy.trader.constant import (
+    Direction,
+    Offset,
+    Exchange,
+    Interval,
+    Status
+)
 from vnpy.trader.database import get_database, BaseDatabase
 from vnpy.trader.object import OrderData, TradeData, BarData, TickData
-from vnpy.trader.utility import round_to
+from vnpy.trader.utility import round_to, extract_vt_symbol
 from vnpy.trader.optimize import (
     OptimizationSetting,
     check_optimization_setting,
@@ -208,26 +213,6 @@ class BacktestingEngine:
             func = self.new_tick
 
         self.strategy.on_init()
-
-        # Use the first [days] of history data for initializing strategy
-        day_count: int = 0
-        ix: int = 0
-
-        for ix, data in enumerate(self.history_data):
-            if self.datetime and data.datetime.day != self.datetime.day:
-                day_count += 1
-                if day_count >= self.days:
-                    break
-
-            self.datetime = data.datetime
-
-            try:
-                self.callback(data)
-            except Exception:
-                self.output("触发异常，回测终止")
-                self.output(traceback.format_exc())
-                return
-
         self.strategy.inited = True
         self.output("策略初始化完成")
 
@@ -235,17 +220,11 @@ class BacktestingEngine:
         self.strategy.trading = True
         self.output("开始回放历史数据")
 
-        # Use the rest of history data for running backtesting
-        backtesting_data: list = self.history_data[ix:]
-        if len(backtesting_data) <= 1:
-            self.output("历史数据不足，回测终止")
-            return
-
-        total_size: int = len(backtesting_data)
+        total_size: int = len(self.history_data)
         batch_size: int = max(int(total_size / 10), 1)
 
         for ix, i in enumerate(range(0, total_size, batch_size)):
-            batch_data: list = backtesting_data[i: i + batch_size]
+            batch_data: list = self.history_data[i: i + batch_size]
             for data in batch_data:
                 try:
                     func(data)
@@ -789,15 +768,46 @@ class BacktestingEngine:
         use_database: bool
     ) -> List[BarData]:
         """"""
-        self.days = days
         self.callback = callback
-        return []
+
+        init_end = self.start - INTERVAL_DELTA_MAP[interval]
+        init_start = self.start - timedelta(days=days)
+
+        symbol, exchange = extract_vt_symbol(vt_symbol)
+
+        bars: List[BarData] = load_bar_data(
+            symbol,
+            exchange,
+            interval,
+            init_start,
+            init_end
+        )
+
+        for bar in bars:
+            callback(bar)
+
+        return bars
 
     def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> List[TickData]:
         """"""
-        self.days = days
         self.callback = callback
-        return []
+
+        init_end = self.start - timedelta(seconds=1)
+        init_start = self.start - timedelta(days=days)
+
+        symbol, exchange = extract_vt_symbol(vt_symbol)
+
+        ticks: List[TickData] = load_tick_data(
+            symbol,
+            exchange,
+            init_start,
+            init_end
+        )
+
+        for tick in ticks:
+            callback(tick)
+
+        return ticks
 
     def send_order(
         self,
