@@ -138,7 +138,11 @@ class BacktestingEngine:
         self.exchange = Exchange(exchange_str)
 
         self.capital = capital
-        self.end = end
+
+        if not end:
+            end = datetime.now()
+        self.end = end.replace(hour=23, minute=59, second=59)
+
         self.mode = mode
         self.risk_free = risk_free
         self.annual_days = annual_days
@@ -1134,7 +1138,7 @@ def evaluate(
     statistics: dict = engine.calculate_statistics(output=False)
 
     target_value: float = statistics[target_name]
-    return (str(setting), target_value, statistics)
+    return (setting, target_value, statistics)
 
 
 def wrap_evaluate(engine: BacktestingEngine, target_name: str) -> callable:
