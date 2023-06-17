@@ -180,7 +180,7 @@ class CtaTemplate(ABC):
         Send sell order to close a long position.
         """
         return self.send_order(
-            Direction.SHORT,
+            Direction.LONG,
             Offset.CLOSE,
             price,
             volume,
@@ -222,7 +222,7 @@ class CtaTemplate(ABC):
         Send cover order to close a short position.
         """
         return self.send_order(
-            Direction.LONG,
+            Direction.SHORT,
             Offset.CLOSE,
             price,
             volume,
