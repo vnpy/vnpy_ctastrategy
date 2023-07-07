@@ -311,9 +311,6 @@ class CtaTemplate(ABC):
             use_database
         )
 
-        for bar in bars:
-            callback(bar)
-
     def load_tick(self, days: int) -> None:
         """
         Load historical tick data for initializing strategy.
