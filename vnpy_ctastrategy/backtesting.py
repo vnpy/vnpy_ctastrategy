@@ -786,9 +786,6 @@ class BacktestingEngine:
             init_end
         )
 
-        for bar in bars:
-            callback(bar)
-
         return bars
 
     def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> List[TickData]:
@@ -806,9 +803,6 @@ class BacktestingEngine:
             init_start,
             init_end
         )
-
-        for tick in ticks:
-            callback(tick)
 
         return ticks
 
