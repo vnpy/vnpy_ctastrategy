@@ -472,7 +472,8 @@ class BacktestingEngine:
         self.output("策略统计指标计算完成")
         return statistics
 
-    def show_chart(self, df: DataFrame = None) -> None:
+    # def show_chart(self, df: DataFrame = None) -> None:
+    def show_chart(self, df: DataFrame = None) -> go.Figure:
         """"""
         # Check DataFrame input exterior
         if df is None:
@@ -513,7 +514,9 @@ class BacktestingEngine:
         fig.add_trace(pnl_histogram, row=4, col=1)
 
         fig.update_layout(height=1000, width=1000)
-        fig.show()
+        # fig.show()
+
+        return fig
 
     def run_bf_optimization(
         self,
