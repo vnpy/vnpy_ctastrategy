@@ -398,6 +398,7 @@ class BacktestingEngine:
                 sharpe_ratio: float = 0
 
             if ewm_return_std:
+                daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
                 ewm_sharpe_ratio: float = (ewm_daily_return - daily_risk_free) / ewm_return_std * np.sqrt(self.annual_days)
             else:
                 ewm_sharpe_ratio: float = 0
