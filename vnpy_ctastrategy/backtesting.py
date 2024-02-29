@@ -319,7 +319,7 @@ class BacktestingEngine:
         return_std: float = 0
         sharpe_ratio: float = 0
         ewm_sharpe_ratio: float = 0
-        ewm_halflife: int = 22
+        ewm_halflife: int = 120
         return_drawdown_ratio: float = 0
 
         # Check if balance is always positive
