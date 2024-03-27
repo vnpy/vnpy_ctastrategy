@@ -387,9 +387,12 @@ class BacktestingEngine:
             total_return: float = (end_balance / self.capital - 1) * 100
             annual_return: float = total_return / total_days * self.annual_days
             daily_return: float = df["return"].mean() * 100
-            ewm_daily_return: float = df["return"].ewm(halflife=ewm_halflife).mean().iloc[-1] * 100
             return_std: float = df["return"].std() * 100
+            ewm_daily_return: float = df["return"].ewm(halflife=ewm_halflife).mean().iloc[-1] * 100
             ewm_return_std: float = df["return"].ewm(halflife=ewm_halflife).std().iloc[-1] * 100
+            # df['sharpe_series'] = df['return'].expanding().mean() / df['return'].expanding().std()
+            # df['ewm_sharpe_ratio'] = df['sharpe_series'].ewm(halflife=ewm_halflife).mean()
+            # ewm_sharpe_ratio: float = df['ewm_sharpe_ratio'].iloc[-1]
 
             if return_std:
                 daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
