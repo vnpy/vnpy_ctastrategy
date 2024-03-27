@@ -8,20 +8,21 @@ from datetime import datetime, timedelta
 from typing import Dict
 
 from vnpy.trader.constant import Direction, Offset, Interval
+from .locale import _
 
 APP_NAME = "CtaStrategy"
 STOPORDER_PREFIX = "STOP"
 
 
 class StopOrderStatus(Enum):
-    WAITING = "等待中"
-    CANCELLED = "已撤销"
-    TRIGGERED = "已触发"
+    WAITING = _("等待中")
+    CANCELLED = _("已撤销")
+    TRIGGERED = _("已触发")
 
 
 class EngineType(Enum):
-    LIVE = "实盘"
-    BACKTESTING = "回测"
+    LIVE = _("实盘")
+    BACKTESTING = _("回测")
 
 
 class BacktestingMode(Enum):
