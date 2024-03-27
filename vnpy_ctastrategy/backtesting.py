@@ -388,11 +388,11 @@ class BacktestingEngine:
             annual_return: float = total_return / total_days * self.annual_days
             daily_return: float = df["return"].mean() * 100
             return_std: float = df["return"].std() * 100
-            ewm_daily_return: float = df["return"].ewm(halflife=ewm_halflife).mean().iloc[-1] * 100
-            ewm_return_std: float = df["return"].ewm(halflife=ewm_halflife).std().iloc[-1] * 100
-            # df['sharpe_series'] = df['return'].expanding().mean() / df['return'].expanding().std()
-            # df['ewm_sharpe_ratio'] = df['sharpe_series'].ewm(halflife=ewm_halflife).mean()
-            # ewm_sharpe_ratio: float = df['ewm_sharpe_ratio'].iloc[-1]
+            # ewm_daily_return: float = df["return"].ewm(halflife=ewm_halflife).mean().iloc[-1] * 100
+            # ewm_return_std: float = df["return"].ewm(halflife=ewm_halflife).std().iloc[-1] * 100
+            df['sharpe_series'] = df['return'].expanding().mean() / df['return'].expanding().std()
+            df['ewm_sharpe_ratio'] = df['sharpe_series'].ewm(halflife=ewm_halflife).mean()
+            ewm_sharpe_ratio: float = df['ewm_sharpe_ratio'].iloc[-1]
 
             if return_std:
                 daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
@@ -400,11 +400,11 @@ class BacktestingEngine:
             else:
                 sharpe_ratio: float = 0
 
-            if ewm_return_std:
-                daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
-                ewm_sharpe_ratio: float = (ewm_daily_return - daily_risk_free) / ewm_return_std * np.sqrt(self.annual_days)
-            else:
-                ewm_sharpe_ratio: float = 0
+            # if ewm_return_std:
+            #     daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
+            #     ewm_sharpe_ratio: float = (ewm_daily_return - daily_risk_free) / ewm_return_std * np.sqrt(self.annual_days)
+            # else:
+            #     ewm_sharpe_ratio: float = 0
 
             if max_ddpercent:
                 return_drawdown_ratio: float = -total_return / max_ddpercent
