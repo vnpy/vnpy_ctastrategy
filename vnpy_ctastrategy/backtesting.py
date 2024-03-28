@@ -524,8 +524,6 @@ class BacktestingEngine:
         fig.add_trace(pnl_histogram, row=4, col=1)
 
         fig.update_layout(height=1000, width=1000)
-        # fig.show()
-
         return fig
 
     def run_bf_optimization(
