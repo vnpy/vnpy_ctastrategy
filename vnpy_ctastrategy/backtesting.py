@@ -394,13 +394,15 @@ class BacktestingEngine:
             if return_std:
                 daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
                 sharpe_ratio: float = (daily_return - daily_risk_free) / return_std * np.sqrt(self.annual_days)
-                df['sharpe_series'] = (df['return'].expanding().mean() - daily_risk_free) / df['return'].expanding().std() * np.sqrt(self.annual_days)
-                df['ewm_sharpe_ratio'] = df['sharpe_series'].ewm(halflife=ewm_halflife).mean()
-                ewm_sharpe_ratio: float = df['ewm_sharpe_ratio'].iloc[-1]
+                # df['sharpe_series'] = (df['return'].expanding().mean() - daily_risk_free) / df['return'].expanding().std() * np.sqrt(self.annual_days)
+                # df['ewm_sharpe_ratio'] = df['sharpe_series'].ewm(halflife=ewm_halflife).mean()
+                # ewm_sharpe_ratio: float = df['ewm_sharpe_ratio'].iloc[-1]
+                df["ewm_sharpe_ratio"] = (df["return"].ewm(halflife=ewm_halflife).mean() - daily_risk_free) / df["return"].ewm(halflife=ewm_halflife).std() * np.sqrt(self.annual_days)
+                ewm_sharpe_ratio: float = df["ewm_sharpe_ratio"].iloc[-1]
             else:
                 sharpe_ratio: float = 0
-                df['sharpe_series'] = [0 for _ in range(len(df))]
-                df['ewm_sharpe_ratio'] = [0 for _ in range(len(df))]
+                # df['sharpe_series'] = 0
+                df['ewm_sharpe_ratio'] = 0
                 ewm_sharpe_ratio: float = 0
 
             # if ewm_return_std:
