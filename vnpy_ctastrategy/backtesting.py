@@ -6,6 +6,7 @@ import traceback
 
 import numpy as np
 from pandas import DataFrame, Series
+from pandas.core.window import ExponentialMovingWindow
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -57,6 +58,7 @@ class BacktestingEngine:
         self.capital: int = 1_000_000
         self.risk_free: float = 0
         self.annual_days: int = 240
+        self.half_life: int = 120
         self.mode: BacktestingMode = BacktestingMode.BAR
 
         self.strategy_class: Type[CtaTemplate] = None
@@ -122,7 +124,8 @@ class BacktestingEngine:
         end: datetime = None,
         mode: BacktestingMode = BacktestingMode.BAR,
         risk_free: float = 0,
-        annual_days: int = 240
+        annual_days: int = 240,
+        half_life: int = 120
     ) -> None:
         """"""
         self.mode = mode
@@ -146,6 +149,7 @@ class BacktestingEngine:
         self.mode = mode
         self.risk_free = risk_free
         self.annual_days = annual_days
+        self.half_life = half_life
 
     def add_strategy(self, strategy_class: Type[CtaTemplate], setting: dict) -> None:
         """"""
@@ -318,8 +322,7 @@ class BacktestingEngine:
         daily_return: float = 0
         return_std: float = 0
         sharpe_ratio: float = 0
-        ewm_sharpe_ratio: float = 0
-        ewm_halflife: int = 120
+        ewm_sharpe: float = 0
         return_drawdown_ratio: float = 0
 
         # Check if balance is always positive
@@ -336,10 +339,7 @@ class BacktestingEngine:
             x[x <= 0] = np.nan
             df["return"] = np.log(x).fillna(0)
 
-            df["highlevel"] = (
-                df["balance"].rolling(
-                    min_periods=1, window=len(df), center=False).max()
-            )
+            df["highlevel"] = df["balance"].rolling(min_periods=1, window=len(df), center=False).max()
             df["drawdown"] = df["balance"] - df["highlevel"]
             df["ddpercent"] = df["drawdown"] / df["highlevel"] * 100
 
@@ -388,28 +388,18 @@ class BacktestingEngine:
             annual_return: float = total_return / total_days * self.annual_days
             daily_return: float = df["return"].mean() * 100
             return_std: float = df["return"].std() * 100
-            # ewm_daily_return: float = df["return"].ewm(halflife=ewm_halflife).mean().iloc[-1] * 100
-            # ewm_return_std: float = df["return"].ewm(halflife=ewm_halflife).std().iloc[-1] * 100
 
             if return_std:
                 daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
                 sharpe_ratio: float = (daily_return - daily_risk_free) / return_std * np.sqrt(self.annual_days)
-                # df['sharpe_series'] = (df['return'].expanding().mean() - daily_risk_free) / df['return'].expanding().std() * np.sqrt(self.annual_days)
-                # df['ewm_sharpe_ratio'] = df['sharpe_series'].ewm(halflife=ewm_halflife).mean()
-                # ewm_sharpe_ratio: float = df['ewm_sharpe_ratio'].iloc[-1]
-                df["ewm_sharpe_ratio"] = (df["return"].ewm(halflife=ewm_halflife).mean() * 100 - daily_risk_free) / (df["return"].ewm(halflife=ewm_halflife).std() * 100) * np.sqrt(self.annual_days)
-                ewm_sharpe_ratio: float = df["ewm_sharpe_ratio"].iloc[-1]
+
+                ewm_window: ExponentialMovingWindow = df["return"].ewm(halflife=self.half_life)
+                ewm_mean: Series = ewm_window.mean() * 100
+                ewm_std: Series = ewm_window.std() * 100
+                ewm_sharpe: float = ((ewm_mean - daily_risk_free) / ewm_std)[-1] * np.sqrt(self.annual_days)
             else:
                 sharpe_ratio: float = 0
-                # df['sharpe_series'] = 0
-                df['ewm_sharpe_ratio'] = 0
-                ewm_sharpe_ratio: float = 0
-
-            # if ewm_return_std:
-            #     daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
-            #     ewm_sharpe_ratio: float = (ewm_daily_return - daily_risk_free) / ewm_return_std * np.sqrt(self.annual_days)
-            # else:
-            #     ewm_sharpe_ratio: float = 0
+                ewm_sharpe: float = 0
 
             if max_ddpercent:
                 return_drawdown_ratio: float = -total_return / max_ddpercent
@@ -450,7 +440,7 @@ class BacktestingEngine:
             self.output(f"日均收益率：\t{daily_return:,.2f}%")
             self.output(f"收益标准差：\t{return_std:,.2f}%")
             self.output(f"Sharpe Ratio：\t{sharpe_ratio:,.2f}")
-            self.output(f"EWM Sharpe Ratio：\t{ewm_sharpe_ratio:,.2f}")
+            self.output(f"EWM Sharpe：\t{ewm_sharpe:,.2f}")
             self.output(f"收益回撤比：\t{return_drawdown_ratio:,.2f}")
 
         statistics: dict = {
@@ -479,7 +469,7 @@ class BacktestingEngine:
             "daily_return": daily_return,
             "return_std": return_std,
             "sharpe_ratio": sharpe_ratio,
-            "ewm_sharpe_ratio": ewm_sharpe_ratio,
+            "ewm_sharpe": ewm_sharpe,
             "return_drawdown_ratio": return_drawdown_ratio,
         }
 
