@@ -64,6 +64,7 @@ class DoubleMaStrategy(CtaTemplate):
         """
         Callback of new bar data update.
         """
+        self.cancel_all()
 
         am = self.am
         am.update_bar(bar)
