@@ -566,7 +566,7 @@ class BacktestingEngine:
 
         if output:
             for result in results:
-                msg: str = f"参数：{result[0]}, 目标：{result[1]}"
+                msg: str = _("参数：{}, 目标：{}").format(result[0], result[1])
                 self.output(msg)
 
         return results

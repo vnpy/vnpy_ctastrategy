@@ -461,12 +461,12 @@ class SettingEditor(QtWidgets.QDialog):
 
         # Add vt_symbol and name edit if add new strategy
         if self.class_name:
-            self.setWindowTitle("添加策略：{}".format(self.class_name))
+            self.setWindowTitle(_("添加策略：{}").format(self.class_name))
             button_text: str = _("添加")
             parameters: dict = {"strategy_name": "", "vt_symbol": ""}
             parameters.update(self.parameters)
         else:
-            self.setWindowTitle("参数编辑：{}".format(self.strategy_name))
+            self.setWindowTitle(_("参数编辑：{}").format(self.strategy_name))
             button_text: str = _("确定")
             parameters: dict = self.parameters
 

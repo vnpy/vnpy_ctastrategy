@@ -12,7 +12,9 @@ from vnpy_ctastrategy.locale import _
 
 
 class DoubleMaStrategy(CtaTemplate):
-    author = _("用Python的交易员")
+    """"""
+
+    author = "用Python的交易员"
 
     fast_window = 10
     slow_window = 20
