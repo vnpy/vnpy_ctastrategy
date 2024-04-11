@@ -33,7 +33,7 @@ msgstr "Loading progress: {} [{:.0%}]"
 
 #: vnpy_ctastrategy\backtesting.py:210
 msgid "历史数据加载完成，数据量：{}"
-msgstr "Historical data loading completed, data volume:{}"
+msgstr "Historical data loading completed, data count: {}"
 
 #: vnpy_ctastrategy\backtesting.py:221
 msgid "策略初始化完成"
@@ -49,7 +49,7 @@ msgstr "Exception triggered, backtest terminated"
 
 #: vnpy_ctastrategy\backtesting.py:242
 msgid "回放进度：{} [{:.0%}]"
-msgstr "Backtest progress: {} [{:.0%}]"
+msgstr "Backtesting progress: {} [{:.0%}]"
 
 #: vnpy_ctastrategy\backtesting.py:245
 msgid "历史数据回放结束"
@@ -77,23 +77,23 @@ msgstr "There was a liquidation during the backtest (the funds were less than or
 
 #: vnpy_ctastrategy\backtesting.py:404
 msgid "首个交易日：\t{}"
-msgstr "Start date: \t{}"
+msgstr "Start Date: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:405
 msgid "最后交易日：\t{}"
-msgstr "End date: \t{}"
+msgstr "End Date: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:407
 msgid "总交易日：\t{}"
-msgstr "Total days: \t{}"
+msgstr "Total Days: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:408
 msgid "盈利交易日：\t{}"
-msgstr "Profit days: \t{}"
+msgstr "Profit Days: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:409
 msgid "亏损交易日：\t{}"
-msgstr "Loss days: \t{}"
+msgstr "Loss Days: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:411
 msgid "起始资金：\t{:,.2f}"
@@ -101,79 +101,79 @@ msgstr "Capital: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:412
 msgid "结束资金：\t{:,.2f}"
-msgstr "End balance: \t{:,.2f}"
+msgstr "End Balance: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:414
 msgid "总收益率：\t{:,.2f}%"
-msgstr "Total return: \t{:,.2f}%"
+msgstr "Total Return: \t{:,.2f}%"
 
 #: vnpy_ctastrategy\backtesting.py:415
 msgid "年化收益：\t{:,.2f}%"
-msgstr "Annual return: \t{:,.2f}%"
+msgstr "Annual Return: \t{:,.2f}%"
 
 #: vnpy_ctastrategy\backtesting.py:416
 msgid "最大回撤: \t{:,.2f}"
-msgstr "Max drawdown: \t{:,.2f}"
+msgstr "Max Drawdown: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:417
 msgid "百分比最大回撤: {:,.2f}%"
-msgstr "Max ddpercent: {:,.2f}%"
+msgstr "Max Ddpercent: {:,.2f}%"
 
 #: vnpy_ctastrategy\backtesting.py:418
 msgid "最长回撤天数: \t{}"
-msgstr "Max drawdown duration: \t{}"
+msgstr "Max Drawdown Duration: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:420
 msgid "总盈亏：\t{:,.2f}"
-msgstr "Total net pnl: \t{:,.2f}"
+msgstr "Total Det Pnl: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:421
 msgid "总手续费：\t{:,.2f}"
-msgstr "Total commission: \t{:,.2f}"
+msgstr "Total Commission: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:422
 msgid "总滑点：\t{:,.2f}"
-msgstr "Total slippage: \t{:,.2f}"
+msgstr "Total Slippage: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:423
 msgid "总成交金额：\t{:,.2f}"
-msgstr "Total turnover: \t{:,.2f}"
+msgstr "Total Turnover: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:424
 msgid "总成交笔数：\t{}"
-msgstr "Total trade count: \t{}"
+msgstr "Total Trade Count: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:426
 msgid "日均盈亏：\t{:,.2f}"
-msgstr "Daily net pnl: \t{:,.2f}"
+msgstr "Daily Net P&L: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:427
 msgid "日均手续费：\t{:,.2f}"
-msgstr "Daily commission: \t{:,.2f}"
+msgstr "Daily Commission: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:428
 msgid "日均滑点：\t{:,.2f}"
-msgstr "Daily slippage: \t{:,.2f}"
+msgstr "Daily Slippage: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:429
 msgid "日均成交金额：\t{:,.2f}"
-msgstr "Daily turnover: \t{:,.2f}"
+msgstr "Daily Turnover: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:430
 msgid "日均成交笔数：\t{}"
-msgstr "Daily trade count: \t{}"
+msgstr "Daily Trade Count: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:432
 msgid "日均收益率：\t{:,.2f}%"
-msgstr "Daily return: \t{:,.2f}%"
+msgstr "Daily Return: \t{:,.2f}%"
 
 #: vnpy_ctastrategy\backtesting.py:433
 msgid "收益标准差：\t{:,.2f}%"
-msgstr "Return std: \t{:,.2f}%"
+msgstr "Return Std: \t{:,.2f}%"
 
 #: vnpy_ctastrategy\backtesting.py:435
 msgid "收益回撤比：\t{:,.2f}"
-msgstr "Return drawdown ratio: \t{:,.2f}"
+msgstr "Return Drawdown Ratio: \t{:,.2f}"
 
 #: vnpy_ctastrategy\backtesting.py:472
 msgid "策略统计指标计算完成"
@@ -237,11 +237,11 @@ msgstr "Failed to create strategy instance, strategy class {} not found"
 
 #: vnpy_ctastrategy\engine.py:639
 msgid "创建策略失败，本地代码缺失交易所后缀"
-msgstr "Failed to create strategy instance, vt_symbol missing the exchange suffix"
+msgstr "Failed to create strategy instance, the vt_symbol missing the exchange suffix"
 
 #: vnpy_ctastrategy\engine.py:644
 msgid "创建策略失败，本地代码的交易所后缀不正确"
-msgstr "Failed to create strategy instance, incorrect exchange suffix for vt_symbol"
+msgstr "Failed to create strategy instance, incorrect exchange suffix for the vt_symbol"
 
 #: vnpy_ctastrategy\engine.py:672
 msgid "{}已经完成初始化，禁止重复操作"
