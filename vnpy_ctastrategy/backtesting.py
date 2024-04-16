@@ -415,7 +415,7 @@ class BacktestingEngine:
             self.output(_("年化收益：\t{:,.2f}%").format(annual_return))
             self.output(_("最大回撤: \t{:,.2f}").format(max_drawdown))
             self.output(_("百分比最大回撤: {:,.2f}%").format(max_ddpercent))
-            self.output(_("最长回撤天数: \t{}").format(max_drawdown_duration))
+            self.output(_("最大回撤天数: \t{}").format(max_drawdown_duration))
 
             self.output(_("总盈亏：\t{:,.2f}").format(total_net_pnl))
             self.output(_("总手续费：\t{:,.2f}").format(total_commission))
@@ -566,7 +566,7 @@ class BacktestingEngine:
 
         if output:
             for result in results:
-                msg: str = f"参数：{result[0]}, 目标：{result[1]}"
+                msg: str = _("参数：{}, 目标：{}").format(result[0], result[1])
                 self.output(msg)
 
         return results

@@ -14,7 +14,7 @@ from vnpy_ctastrategy.locale import _
 class BollChannelStrategy(CtaTemplate):
     """"""
 
-    author = _("用Python的交易员")
+    author = "用Python的交易员"
 
     boll_window = 18
     boll_dev = 3.4

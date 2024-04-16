@@ -14,7 +14,7 @@ from vnpy_ctastrategy.locale import _
 class KingKeltnerStrategy(CtaTemplate):
     """"""
 
-    author = _("用Python的交易员")
+    author = "用Python的交易员"
 
     kk_length = 11
     kk_dev = 1.6

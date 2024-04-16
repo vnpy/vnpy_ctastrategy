@@ -14,7 +14,7 @@ from vnpy_ctastrategy.locale import _
 
 class TurtleSignalStrategy(CtaTemplate):
     """"""
-    author = _("用Python的交易员")
+    author = "用Python的交易员"
 
     entry_window = 20
     exit_window = 10

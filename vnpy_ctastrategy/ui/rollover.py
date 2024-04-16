@@ -193,7 +193,7 @@ class RolloverTool(QtWidgets.QDialog):
             vt_symbol,
             parameters
         )
-        self.write_log("创建策略{}[{}]".format(name, vt_symbol))
+        self.write_log(_("创建策略{}[{}]").format(name, vt_symbol))
 
         # Init new strategy
         self.cta_engine.init_strategy(name)

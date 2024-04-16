@@ -13,7 +13,7 @@ from vnpy_ctastrategy.locale import _
 
 class MultiTimeframeStrategy(CtaTemplate):
     """"""
-    author = _("用Python的交易员")
+    author = "用Python的交易员"
 
     rsi_signal = 20
     rsi_window = 14

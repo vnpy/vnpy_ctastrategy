@@ -135,7 +135,7 @@ class MaSignal(CtaSignal):
 class MultiSignalStrategy(TargetPosTemplate):
     """"""
 
-    author = _("用Python的交易员")
+    author = "用Python的交易员"
 
     rsi_window = 14
     rsi_level = 20
