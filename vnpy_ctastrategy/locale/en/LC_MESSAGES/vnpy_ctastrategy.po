@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-04-10 16:01+0800\n"
+"POT-Creation-Date: 2024-04-16 11:21+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -120,7 +120,7 @@ msgid "百分比最大回撤: {:,.2f}%"
 msgstr "Max Ddpercent: {:,.2f}%"
 
 #: vnpy_ctastrategy\backtesting.py:418
-msgid "最长回撤天数: \t{}"
+msgid "最大回撤天数: \t{}"
 msgstr "Max Drawdown Duration: \t{}"
 
 #: vnpy_ctastrategy\backtesting.py:420
