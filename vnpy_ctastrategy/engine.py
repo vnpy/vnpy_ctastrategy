@@ -639,7 +639,7 @@ class CtaEngine(BaseEngine):
             self.write_log("创建策略失败，本地代码缺失交易所后缀")
             return
 
-        _, exchange_str = vt_symbol.split(".")
+        _, exchange_str = vt_symbol.rsplit(".", 1)
         if exchange_str not in Exchange.__members__:
             self.write_log("创建策略失败，本地代码的交易所后缀不正确")
             return
@@ -785,10 +785,10 @@ class CtaEngine(BaseEngine):
         """
         Load strategy class from source code.
         """
-        path1: Path = Path(__file__).parent.joinpath("strategies")
+        path1: Path = Path(__file__).parent.joinpath("strategies")# __file__是当前文件的路径
         self.load_strategy_class_from_folder(path1, "vnpy_ctastrategy.strategies")
 
-        path2: Path = Path.cwd().joinpath("strategies")
+        path2: Path = Path.cwd().joinpath("strategies")# cwd()是当前工作目录
         self.load_strategy_class_from_folder(path2, "strategies")
 
     def load_strategy_class_from_folder(self, path: Path, module_name: str = "") -> None:
@@ -923,7 +923,7 @@ class CtaEngine(BaseEngine):
         self.strategy_setting.pop(strategy_name)
         save_json(self.setting_filename, self.strategy_setting)
 
-        self.strategy_data.pop(strategy_name, None)
+        self.strategy_data.pop(strategy_name, None)# None表示如果没有这个key，就不删除
         save_json(self.data_filename, self.strategy_data)
 
     def put_stop_order_event(self, stop_order: StopOrder) -> None:

@@ -222,8 +222,12 @@ class RolloverTool(QtWidgets.QDialog):
 
         if direction == Direction.LONG:
             price = tick.ask_price_1 + contract.pricetick * payup
+            if tick.limit_up:
+                price = min(price, tick.limit_up)
         else:
             price = tick.bid_price_1 - contract.pricetick * payup
+            if tick.limit_down:
+                price = max(price, tick.limit_down)
 
         while True:
             order_volume: int = min(volume, max_volume)

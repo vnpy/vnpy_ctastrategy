@@ -37,7 +37,6 @@ from .base import (
 )
 from .template import CtaTemplate
 
-
 class BacktestingEngine:
     """"""
 
@@ -323,6 +322,8 @@ class BacktestingEngine:
         return_std: float = 0
         sharpe_ratio: float = 0
         ewm_sharpe: float = 0
+        sortino_ratio: float = 0
+        ewm_sortino: float = 0
         return_drawdown_ratio: float = 0
 
         # Check if balance is always positive
@@ -339,7 +340,7 @@ class BacktestingEngine:
             x[x <= 0] = np.nan
             df["return"] = np.log(x).fillna(0)
 
-            df["highlevel"] = df["balance"].rolling(min_periods=1, window=len(df), center=False).max()
+            df["highlevel"] = df["balance"].expanding().max()
             df["drawdown"] = df["balance"] - df["highlevel"]
             df["ddpercent"] = df["drawdown"] / df["highlevel"] * 100
 
@@ -393,13 +394,27 @@ class BacktestingEngine:
                 daily_risk_free: float = self.risk_free / np.sqrt(self.annual_days)
                 sharpe_ratio: float = (daily_return - daily_risk_free) / return_std * np.sqrt(self.annual_days)
 
+                downside_return: Series = df["return"].clip(upper=0) # 均值不再是0
+                downside_deviation: float = np.sqrt(np.mean(np.square(downside_return))) * 100 # 注意不是std，差别：downside_returns不减去均值
+                sortino_ratio: float =(daily_return - daily_risk_free) / downside_deviation * np.sqrt(self.annual_days)
+
                 ewm_window: ExponentialMovingWindow = df["return"].ewm(halflife=self.half_life)
                 ewm_mean: Series = ewm_window.mean() * 100
                 ewm_std: Series = ewm_window.std() * 100
-                ewm_sharpe: float = ((ewm_mean - daily_risk_free) / ewm_std)[-1] * np.sqrt(self.annual_days)
+                df["ewm_sharpe"]: Series = (ewm_mean - daily_risk_free) / ewm_std * np.sqrt(self.annual_days)
+                ewm_sharpe: float = df["ewm_sharpe"].values[-1]
+
+                ewm_sortino_window: ExponentialMovingWindow = downside_return.ewm(halflife=self.half_life)
+                ewm_sortino_mean: Series = ewm_sortino_window.mean() * 100
+                downside_deviation: Series = np.sqrt(np.mean(np.square(downside_return))) * 100
+                df["ewm_sortino"]: Series = (ewm_mean - daily_risk_free) / downside_deviation * np.sqrt(self.annual_days)
+                ewm_sortino: float = df["ewm_sortino"].values[-1]
             else:
                 sharpe_ratio: float = 0
+                df['ewm_sharpe']: Series = 0
                 ewm_sharpe: float = 0
+                sortino_ratio: float = 0
+                df['ewm_sortino']: Series = 0
 
             if max_ddpercent:
                 return_drawdown_ratio: float = -total_return / max_ddpercent
@@ -441,6 +456,8 @@ class BacktestingEngine:
             self.output(f"收益标准差：\t{return_std:,.2f}%")
             self.output(f"Sharpe Ratio：\t{sharpe_ratio:,.2f}")
             self.output(f"EWM Sharpe：\t{ewm_sharpe:,.2f}")
+            self.output(f"Sortino Ratio：\t{sortino_ratio:,.2f}")
+            self.output(f"EWM Sortino：\t{ewm_sortino:,.2f}")
             self.output(f"收益回撤比：\t{return_drawdown_ratio:,.2f}")
 
         statistics: dict = {
@@ -470,6 +487,8 @@ class BacktestingEngine:
             "return_std": return_std,
             "sharpe_ratio": sharpe_ratio,
             "ewm_sharpe": ewm_sharpe,
+            "sortino_ratio": sortino_ratio,
+            "ewm_sortino": ewm_sortino,
             "return_drawdown_ratio": return_drawdown_ratio,
         }
 
@@ -1022,6 +1041,9 @@ class DailyResult:
         self.holding_pnl: float = 0
         self.total_pnl: float = 0
         self.net_pnl: float = 0
+
+        self.ewm_sharpe: float = 0
+        self.ewm_sortino: float = 0
 
     def add_trade(self, trade: TradeData) -> None:
         """"""

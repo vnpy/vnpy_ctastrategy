@@ -127,3 +127,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/vnpy_ctastrategy/Batch_CTABacktesting/

@@ -6,7 +6,7 @@ from vnpy.trader.constant import Interval, Direction, Offset
 from vnpy.trader.object import BarData, TickData, OrderData, TradeData
 from vnpy.trader.utility import virtual
 
-from .base import StopOrder, EngineType
+from .base import StopOrder, EngineType, BacktestingMode
 
 
 class CtaTemplate(ABC):
@@ -436,6 +436,8 @@ class TargetPosTemplate(CtaTemplate):
         """"""
         if not self.check_order_finished():
             self.cancel_old_order()
+            if self.get_engine_type() == EngineType.BACKTESTING and hasattr(self.cta_engine, 'mode') and self.cta_engine.mode == BacktestingMode.BAR:
+                self.send_new_order()
         else:
             self.send_new_order()
 
