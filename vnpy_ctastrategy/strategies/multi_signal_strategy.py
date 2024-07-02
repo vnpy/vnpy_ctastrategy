@@ -147,7 +147,7 @@ class MultiSignalStrategy(TargetPosTemplate):
 
     parameters = ["rsi_window", "rsi_level", "cci_window",
                   "cci_level", "fast_window", "slow_window"]
-    variables = ["signal_pos", "target_pos"]
+    variables = ["signal_pos"]
 
     def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
         """"""
