@@ -104,7 +104,7 @@ class CtaEngine(BaseEngine):
         self.load_strategy_setting()
         self.load_strategy_data()
         self.register_event()
-        self.write_log("CTA策略引擎初始化成功")
+        self.write_log(_("CTA策略引擎初始化成功"))
 
     def close(self) -> None:
         """"""

@@ -14,7 +14,7 @@ from vnpy_ctastrategy.locale import _
 class AtrRsiStrategy(CtaTemplate):
     """"""
 
-    author = _("用Python的交易员")
+    author = "用Python的交易员"
 
     atr_length = 22
     atr_ma_length = 10
