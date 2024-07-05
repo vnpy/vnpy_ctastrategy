@@ -38,6 +38,7 @@ from .base import (
 from .template import CtaTemplate
 from .locale import _
 
+
 class BacktestingEngine:
     """"""
 
