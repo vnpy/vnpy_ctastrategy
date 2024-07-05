@@ -9,7 +9,6 @@ from vnpy_ctastrategy import (
     BarGenerator,
     ArrayManager,
 )
-from vnpy_ctastrategy.locale import _
 
 
 class TurtleSignalStrategy(CtaTemplate):
@@ -46,20 +45,20 @@ class TurtleSignalStrategy(CtaTemplate):
         """
         Callback when strategy is inited.
         """
-        self.write_log(_("策略初始化"))
+        self.write_log("策略初始化")
         self.load_bar(20)
 
     def on_start(self):
         """
         Callback when strategy is started.
         """
-        self.write_log(_("策略启动"))
+        self.write_log("策略启动")
 
     def on_stop(self):
         """
         Callback when strategy is stopped.
         """
-        self.write_log(_("策略停止"))
+        self.write_log("策略停止")
 
     def on_tick(self, tick: TickData):
         """
