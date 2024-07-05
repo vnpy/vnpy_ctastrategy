@@ -16,7 +16,6 @@ generate_mo_cmd = [
     ".\\vnpy_ctastrategy\\locale\\en\\LC_MESSAGES\\vnpy_ctastrategy"
 ]
 
-print(generate_mo_cmd)
 subprocess.run(generate_mo_cmd)
 
 
