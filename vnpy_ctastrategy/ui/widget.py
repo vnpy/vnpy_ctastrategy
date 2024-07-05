@@ -181,8 +181,9 @@ class CtaManager(QtWidgets.QWidget):
     def find_strategy(self) -> None:
         """"""
         strategy_name = self.strategy_combo.currentText()
-        manager = self.managers[strategy_name]
-        self.scroll_area.ensureWidgetVisible(manager)
+        if strategy_name:
+            manager = self.managers[strategy_name]
+            self.scroll_area.ensureWidgetVisible(manager)
 
     def clear_log(self) -> None:
         """"""
