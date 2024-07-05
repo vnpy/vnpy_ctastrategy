@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2024-04-16 11:21+0800\n"
+"POT-Creation-Date: 2024-07-05 10:17+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,167 +19,167 @@ msgstr ""
 msgid "CTA策略"
 msgstr "CtaStrategy"
 
-#: vnpy_ctastrategy\backtesting.py:159
+#: vnpy_ctastrategy\backtesting.py:163
 msgid "开始加载历史数据"
 msgstr "Start loading historical data"
 
-#: vnpy_ctastrategy\backtesting.py:165
+#: vnpy_ctastrategy\backtesting.py:169
 msgid "起始日期必须小于结束日期"
 msgstr "The start date must be earlier than the end date"
 
-#: vnpy_ctastrategy\backtesting.py:182
+#: vnpy_ctastrategy\backtesting.py:186
 msgid "加载进度：{} [{:.0%}]"
 msgstr "Loading progress: {} [{:.0%}]"
 
-#: vnpy_ctastrategy\backtesting.py:210
+#: vnpy_ctastrategy\backtesting.py:214
 msgid "历史数据加载完成，数据量：{}"
 msgstr "Historical data loading completed, data count: {}"
 
-#: vnpy_ctastrategy\backtesting.py:221
+#: vnpy_ctastrategy\backtesting.py:225
 msgid "策略初始化完成"
 msgstr "Strategy initialization complete"
 
-#: vnpy_ctastrategy\backtesting.py:225
+#: vnpy_ctastrategy\backtesting.py:229
 msgid "开始回放历史数据"
 msgstr "Start replaying historical data"
 
-#: vnpy_ctastrategy\backtesting.py:236
+#: vnpy_ctastrategy\backtesting.py:240
 msgid "触发异常，回测终止"
 msgstr "Exception triggered, backtest terminated"
 
-#: vnpy_ctastrategy\backtesting.py:242
+#: vnpy_ctastrategy\backtesting.py:246
 msgid "回放进度：{} [{:.0%}]"
 msgstr "Backtesting progress: {} [{:.0%}]"
 
-#: vnpy_ctastrategy\backtesting.py:245
+#: vnpy_ctastrategy\backtesting.py:249
 msgid "历史数据回放结束"
 msgstr "Historical backtest complete"
 
-#: vnpy_ctastrategy\backtesting.py:249
+#: vnpy_ctastrategy\backtesting.py:253
 msgid "开始计算逐日盯市盈亏"
 msgstr "Start calculating daily mark-to-market profit and loss"
 
-#: vnpy_ctastrategy\backtesting.py:252
+#: vnpy_ctastrategy\backtesting.py:256
 msgid "回测成交记录为空"
 msgstr "The backtest trade record is empty"
 
-#: vnpy_ctastrategy\backtesting.py:285
+#: vnpy_ctastrategy\backtesting.py:289
 msgid "逐日盯市盈亏计算完成"
 msgstr "The daily mark-to-market profit and loss calculation is complete"
 
-#: vnpy_ctastrategy\backtesting.py:290
+#: vnpy_ctastrategy\backtesting.py:294
 msgid "开始计算策略统计指标"
 msgstr "Start calculating strategy statistical indicators"
 
-#: vnpy_ctastrategy\backtesting.py:347
+#: vnpy_ctastrategy\backtesting.py:349
 msgid "回测中出现爆仓（资金小于等于0），无法计算策略统计指标"
 msgstr "There was a liquidation during the backtest (the funds were less than or equal to 0), and the strategy statistical indicators could not be calculated"
 
-#: vnpy_ctastrategy\backtesting.py:404
+#: vnpy_ctastrategy\backtesting.py:412
 msgid "首个交易日：\t{}"
 msgstr "Start Date: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:405
+#: vnpy_ctastrategy\backtesting.py:413
 msgid "最后交易日：\t{}"
 msgstr "End Date: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:407
+#: vnpy_ctastrategy\backtesting.py:415
 msgid "总交易日：\t{}"
 msgstr "Total Days: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:408
+#: vnpy_ctastrategy\backtesting.py:416
 msgid "盈利交易日：\t{}"
 msgstr "Profit Days: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:409
+#: vnpy_ctastrategy\backtesting.py:417
 msgid "亏损交易日：\t{}"
 msgstr "Loss Days: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:411
+#: vnpy_ctastrategy\backtesting.py:419
 msgid "起始资金：\t{:,.2f}"
 msgstr "Capital: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:412
+#: vnpy_ctastrategy\backtesting.py:420
 msgid "结束资金：\t{:,.2f}"
 msgstr "End Balance: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:414
+#: vnpy_ctastrategy\backtesting.py:422
 msgid "总收益率：\t{:,.2f}%"
 msgstr "Total Return: \t{:,.2f}%"
 
-#: vnpy_ctastrategy\backtesting.py:415
+#: vnpy_ctastrategy\backtesting.py:423
 msgid "年化收益：\t{:,.2f}%"
 msgstr "Annual Return: \t{:,.2f}%"
 
-#: vnpy_ctastrategy\backtesting.py:416
+#: vnpy_ctastrategy\backtesting.py:424
 msgid "最大回撤: \t{:,.2f}"
 msgstr "Max Drawdown: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:417
+#: vnpy_ctastrategy\backtesting.py:425
 msgid "百分比最大回撤: {:,.2f}%"
 msgstr "Max Ddpercent: {:,.2f}%"
 
-#: vnpy_ctastrategy\backtesting.py:418
+#: vnpy_ctastrategy\backtesting.py:426
 msgid "最大回撤天数: \t{}"
 msgstr "Max Drawdown Duration: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:420
+#: vnpy_ctastrategy\backtesting.py:428
 msgid "总盈亏：\t{:,.2f}"
 msgstr "Total Det Pnl: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:421
+#: vnpy_ctastrategy\backtesting.py:429
 msgid "总手续费：\t{:,.2f}"
 msgstr "Total Commission: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:422
+#: vnpy_ctastrategy\backtesting.py:430
 msgid "总滑点：\t{:,.2f}"
 msgstr "Total Slippage: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:423
+#: vnpy_ctastrategy\backtesting.py:431
 msgid "总成交金额：\t{:,.2f}"
 msgstr "Total Turnover: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:424
+#: vnpy_ctastrategy\backtesting.py:432
 msgid "总成交笔数：\t{}"
 msgstr "Total Trade Count: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:426
+#: vnpy_ctastrategy\backtesting.py:434
 msgid "日均盈亏：\t{:,.2f}"
 msgstr "Daily Net P&L: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:427
+#: vnpy_ctastrategy\backtesting.py:435
 msgid "日均手续费：\t{:,.2f}"
 msgstr "Daily Commission: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:428
+#: vnpy_ctastrategy\backtesting.py:436
 msgid "日均滑点：\t{:,.2f}"
 msgstr "Daily Slippage: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:429
+#: vnpy_ctastrategy\backtesting.py:437
 msgid "日均成交金额：\t{:,.2f}"
 msgstr "Daily Turnover: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:430
+#: vnpy_ctastrategy\backtesting.py:438
 msgid "日均成交笔数：\t{}"
 msgstr "Daily Trade Count: \t{}"
 
-#: vnpy_ctastrategy\backtesting.py:432
+#: vnpy_ctastrategy\backtesting.py:440
 msgid "日均收益率：\t{:,.2f}%"
 msgstr "Daily Return: \t{:,.2f}%"
 
-#: vnpy_ctastrategy\backtesting.py:433
+#: vnpy_ctastrategy\backtesting.py:441
 msgid "收益标准差：\t{:,.2f}%"
 msgstr "Return Std: \t{:,.2f}%"
 
-#: vnpy_ctastrategy\backtesting.py:435
+#: vnpy_ctastrategy\backtesting.py:444
 msgid "收益回撤比：\t{:,.2f}"
 msgstr "Return Drawdown Ratio: \t{:,.2f}"
 
-#: vnpy_ctastrategy\backtesting.py:472
+#: vnpy_ctastrategy\backtesting.py:482
 msgid "策略统计指标计算完成"
 msgstr "Strategy statistical indicators calculation completed"
 
-#: vnpy_ctastrategy\backtesting.py:539 vnpy_ctastrategy\backtesting.py:569
+#: vnpy_ctastrategy\backtesting.py:550 vnpy_ctastrategy\backtesting.py:580
 msgid "参数：{}, 目标：{}"
 msgstr "Parameters: {}, Target: {}"
 
@@ -287,67 +287,6 @@ msgstr ""
 msgid "CTA策略引擎"
 msgstr "CtaEngine"
 
-#: vnpy_ctastrategy\strategies\atr_rsi_strategy.py:62
-#: vnpy_ctastrategy\strategies\boll_channel_strategy.py:66
-#: vnpy_ctastrategy\strategies\double_ma_strategy.py:42
-#: vnpy_ctastrategy\strategies\dual_thrust_strategy.py:53
-#: vnpy_ctastrategy\strategies\king_keltner_strategy.py:47
-#: vnpy_ctastrategy\strategies\multi_signal_strategy.py:171
-#: vnpy_ctastrategy\strategies\multi_timeframe_strategy.py:55
-#: vnpy_ctastrategy\strategies\test_strategy.py:42
-#: vnpy_ctastrategy\strategies\turtle_signal_strategy.py:49
-msgid "策略初始化"
-msgstr "Stratey initialize"
-
-#: vnpy_ctastrategy\strategies\atr_rsi_strategy.py:73
-#: vnpy_ctastrategy\strategies\boll_channel_strategy.py:73
-#: vnpy_ctastrategy\strategies\double_ma_strategy.py:49
-#: vnpy_ctastrategy\strategies\dual_thrust_strategy.py:60
-#: vnpy_ctastrategy\strategies\king_keltner_strategy.py:54
-#: vnpy_ctastrategy\strategies\multi_signal_strategy.py:178
-#: vnpy_ctastrategy\strategies\multi_timeframe_strategy.py:62
-#: vnpy_ctastrategy\strategies\test_strategy.py:48
-#: vnpy_ctastrategy\strategies\turtle_signal_strategy.py:56
-msgid "策略启动"
-msgstr "Strategy start"
-
-#: vnpy_ctastrategy\strategies\atr_rsi_strategy.py:79
-#: vnpy_ctastrategy\strategies\boll_channel_strategy.py:79
-#: vnpy_ctastrategy\strategies\double_ma_strategy.py:56
-#: vnpy_ctastrategy\strategies\dual_thrust_strategy.py:66
-#: vnpy_ctastrategy\strategies\king_keltner_strategy.py:60
-#: vnpy_ctastrategy\strategies\multi_signal_strategy.py:184
-#: vnpy_ctastrategy\strategies\multi_timeframe_strategy.py:68
-#: vnpy_ctastrategy\strategies\test_strategy.py:54
-#: vnpy_ctastrategy\strategies\turtle_signal_strategy.py:62
-msgid "策略停止"
-msgstr "Strategy stop"
-
-#: vnpy_ctastrategy\strategies\test_strategy.py:75
-msgid "耗时%s毫秒"
-msgstr "Execution time: %s milliseconds"
-
-#: vnpy_ctastrategy\strategies\test_strategy.py:77
-msgid "测试已全部完成"
-msgstr "All tests have been completed"
-
-#: vnpy_ctastrategy\strategies\test_strategy.py:109
-msgid "执行市价单测试"
-msgstr "Executing market order test"
-
-#: vnpy_ctastrategy\strategies\test_strategy.py:114
-msgid "执行限价单测试"
-msgstr "Executing limit order test"
-
-#: vnpy_ctastrategy\strategies\test_strategy.py:119
-msgid "执行停止单测试"
-msgstr "Executing local stop order test"
-
-#: vnpy_ctastrategy\strategies\test_strategy.py:124
-msgid "执行全部撤单测试"
-msgstr "Executing cancel all orders test"
-
-
 #: vnpy_ctastrategy\ui\rollover.py:36 vnpy_ctastrategy\ui\widget.py:67
 msgid "移仓助手"
 msgstr "Rollover"
@@ -428,90 +367,90 @@ msgstr "Clear Logs"
 msgid "查找"
 msgstr "Find"
 
-#: vnpy_ctastrategy\ui\widget.py:226
+#: vnpy_ctastrategy\ui\widget.py:227
 msgid "初始化"
 msgstr "Init"
 
-#: vnpy_ctastrategy\ui\widget.py:229
+#: vnpy_ctastrategy\ui\widget.py:230
 msgid "启动"
 msgstr "Start"
 
-#: vnpy_ctastrategy\ui\widget.py:233
+#: vnpy_ctastrategy\ui\widget.py:234
 msgid "停止"
 msgstr "Stop"
 
-#: vnpy_ctastrategy\ui\widget.py:237
+#: vnpy_ctastrategy\ui\widget.py:238
 msgid "编辑"
 msgstr "Edit"
 
-#: vnpy_ctastrategy\ui\widget.py:240
+#: vnpy_ctastrategy\ui\widget.py:241
 msgid "移除"
 msgstr "Remove"
 
-#: vnpy_ctastrategy\ui\widget.py:385
+#: vnpy_ctastrategy\ui\widget.py:386
 msgid "停止委托号"
 msgstr "Stop Orderid"
 
-#: vnpy_ctastrategy\ui\widget.py:389
+#: vnpy_ctastrategy\ui\widget.py:390
 msgid "限价委托号"
 msgstr "VT Orderids"
 
-#: vnpy_ctastrategy\ui\widget.py:390
+#: vnpy_ctastrategy\ui\widget.py:391
 msgid "本地代码"
 msgstr "VT Symbol"
 
-#: vnpy_ctastrategy\ui\widget.py:391
+#: vnpy_ctastrategy\ui\widget.py:392
 msgid "方向"
 msgstr "Direction"
 
-#: vnpy_ctastrategy\ui\widget.py:392
+#: vnpy_ctastrategy\ui\widget.py:393
 msgid "开平"
 msgstr "Offset"
 
-#: vnpy_ctastrategy\ui\widget.py:393
+#: vnpy_ctastrategy\ui\widget.py:394
 msgid "价格"
 msgstr "Price"
 
-#: vnpy_ctastrategy\ui\widget.py:394
+#: vnpy_ctastrategy\ui\widget.py:395
 msgid "数量"
 msgstr "Volume"
 
-#: vnpy_ctastrategy\ui\widget.py:395
+#: vnpy_ctastrategy\ui\widget.py:396
 msgid "状态"
 msgstr "Status"
 
-#: vnpy_ctastrategy\ui\widget.py:396 vnpy_ctastrategy\ui\widget.py:417
+#: vnpy_ctastrategy\ui\widget.py:397 vnpy_ctastrategy\ui\widget.py:418
 msgid "时间"
 msgstr "Time"
 
-#: vnpy_ctastrategy\ui\widget.py:397
+#: vnpy_ctastrategy\ui\widget.py:398
 msgid "锁仓"
 msgstr "Lock"
 
-#: vnpy_ctastrategy\ui\widget.py:398
+#: vnpy_ctastrategy\ui\widget.py:399
 msgid "净仓"
 msgstr "Net"
 
-#: vnpy_ctastrategy\ui\widget.py:399
+#: vnpy_ctastrategy\ui\widget.py:400
 msgid "策略名"
 msgstr "Strategy Name"
 
-#: vnpy_ctastrategy\ui\widget.py:418
+#: vnpy_ctastrategy\ui\widget.py:419
 msgid "信息"
 msgstr "Msg"
 
-#: vnpy_ctastrategy\ui\widget.py:464
+#: vnpy_ctastrategy\ui\widget.py:465
 msgid "添加策略：{}"
 msgstr "Add Strategy: {}"
 
-#: vnpy_ctastrategy\ui\widget.py:465
+#: vnpy_ctastrategy\ui\widget.py:466
 msgid "添加"
 msgstr "Add"
 
-#: vnpy_ctastrategy\ui\widget.py:469
+#: vnpy_ctastrategy\ui\widget.py:470
 msgid "参数编辑：{}"
 msgstr "Edit Parameters: {}"
 
-#: vnpy_ctastrategy\ui\widget.py:470
+#: vnpy_ctastrategy\ui\widget.py:471
 msgid "确定"
 msgstr "OK"
