@@ -317,7 +317,7 @@ class BacktestingEngine:
         total_turnover: float = 0
         daily_turnover: float = 0
         total_trade_count: int = 0
-        daily_trade_count: int = 0
+        daily_trade_count: float = 0
         total_return: float = 0
         annual_return: float = 0
         daily_return: float = 0
