@@ -304,6 +304,8 @@ class BacktestingEngine:
         total_days: int = 0
         profit_days: int = 0
         loss_days: int = 0
+        per_profit: int = 0
+        per_loss: int = 0
         end_balance: float = 0
         max_drawdown: float = 0
         max_ddpercent: float = 0
@@ -358,7 +360,9 @@ class BacktestingEngine:
             total_days: int = len(df)
             profit_days: int = len(df[df["net_pnl"] > 0])
             loss_days: int = len(df[df["net_pnl"] < 0])
-
+            per_profit: float = df[df["net_pnl"] > 0]['net_pnl'].sum()/profit_days  #每次盈利
+            per_loss: float = df[df["net_pnl"] < 0]['net_pnl'].sum()/loss_days  #每次亏损
+            
             end_balance = df["balance"].iloc[-1]
             max_drawdown = df["drawdown"].min()
             max_ddpercent = df["ddpercent"].min()
@@ -416,7 +420,9 @@ class BacktestingEngine:
             self.output(_("总交易日：\t{}").format(total_days))
             self.output(_("盈利交易日：\t{}").format(profit_days))
             self.output(_("亏损交易日：\t{}").format(loss_days))
-
+            self.output(f"每次盈利：\t{per_profit}")
+            self.output(f"每次亏损：\t{per_loss}")
+            
             self.output(_("起始资金：\t{:,.2f}").format(self.capital))
             self.output(_("结束资金：\t{:,.2f}").format(end_balance))
 
@@ -450,6 +456,8 @@ class BacktestingEngine:
             "total_days": total_days,
             "profit_days": profit_days,
             "loss_days": loss_days,
+            "per_profit": per_profit,
+            "per_loss": per_loss,
             "capital": self.capital,
             "end_balance": end_balance,
             "max_drawdown": max_drawdown,
