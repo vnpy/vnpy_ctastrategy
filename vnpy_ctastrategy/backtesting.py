@@ -360,8 +360,16 @@ class BacktestingEngine:
             total_days: int = len(df)
             profit_days: int = len(df[df["net_pnl"] > 0])
             loss_days: int = len(df[df["net_pnl"] < 0])
-            per_profit: float = df[df["net_pnl"] > 0]['net_pnl'].sum()/profit_days  #每次盈利
-            per_loss: float = df[df["net_pnl"] < 0]['net_pnl'].sum()/loss_days  #每次亏损
+            # 计算每次盈利
+            if profit_days > 0:
+                per_profit: float = df[df["net_pnl"] > 0]['net_pnl'].sum() / profit_days  # 每次盈利
+            else:
+                per_profit: float = 0.0  # 或者设为 None，根据需要
+            # 计算每次亏损
+            if loss_days > 0:
+                per_loss: float = df[df["net_pnl"] < 0]['net_pnl'].sum() / loss_days  # 每次亏损
+            else:
+                per_loss: float = 0.0  # 或者设为 None，根据需要
             
             end_balance = df["balance"].iloc[-1]
             max_drawdown = df["drawdown"].min()
