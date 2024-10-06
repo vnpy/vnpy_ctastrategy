@@ -221,7 +221,7 @@ class StrategyManager(QtWidgets.QFrame):
     def init_ui(self) -> None:
         """"""
         self.setFixedHeight(300)
-        self.setFrameShape(self.Box)
+        self.setFrameShape(QtWidgets.QFrame.Box)
         self.setLineWidth(1)
 
         self.init_button: QtWidgets.QPushButton = QtWidgets.QPushButton(_("初始化"))
@@ -354,7 +354,7 @@ class DataMonitor(QtWidgets.QTableWidget):
             QtWidgets.QHeaderView.Stretch
         )
         self.verticalHeader().setVisible(False)
-        self.setEditTriggers(self.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         for column, name in enumerate(self._data.keys()):
             value = self._data[name]
