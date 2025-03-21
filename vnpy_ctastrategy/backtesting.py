@@ -4,7 +4,8 @@ from datetime import (
     datetime,
     timedelta
 )
-from typing import Callable, List, Dict, Optional, Type, cast, Any
+from typing import cast, Any
+from collections.abc import Callable
 from functools import lru_cache, partial
 import traceback
 
@@ -66,7 +67,7 @@ class BacktestingEngine:
         self.half_life: int = 120
         self.mode: BacktestingMode = BacktestingMode.BAR
 
-        self.strategy_class: Type[CtaTemplate]
+        self.strategy_class: type[CtaTemplate]
         self.strategy: CtaTemplate
         self.tick: TickData
         self.bar: BarData
@@ -78,19 +79,19 @@ class BacktestingEngine:
         self.history_data: list = []
 
         self.stop_order_count: int = 0
-        self.stop_orders: Dict[str, StopOrder] = {}
-        self.active_stop_orders: Dict[str, StopOrder] = {}
+        self.stop_orders: dict[str, StopOrder] = {}
+        self.active_stop_orders: dict[str, StopOrder] = {}
 
         self.limit_order_count: int = 0
-        self.limit_orders: Dict[str, OrderData] = {}
-        self.active_limit_orders: Dict[str, OrderData] = {}
+        self.limit_orders: dict[str, OrderData] = {}
+        self.active_limit_orders: dict[str, OrderData] = {}
 
         self.trade_count: int = 0
-        self.trades: Dict[str, TradeData] = {}
+        self.trades: dict[str, TradeData] = {}
 
         self.logs: list = []
 
-        self.daily_results: Dict[Date, DailyResult] = {}
+        self.daily_results: dict[Date, DailyResult] = {}
         self.daily_df: DataFrame
 
     def clear_data(self) -> None:
@@ -151,7 +152,7 @@ class BacktestingEngine:
         self.annual_days = annual_days
         self.half_life = half_life
 
-    def add_strategy(self, strategy_class: Type[CtaTemplate], setting: dict) -> None:
+    def add_strategy(self, strategy_class: type[CtaTemplate], setting: dict) -> None:
         """"""
         self.strategy_class = strategy_class
         self.strategy = strategy_class(
@@ -188,7 +189,7 @@ class BacktestingEngine:
             end = min(end, self.end)  # Make sure end time stays within set range
 
             if self.mode == BacktestingMode.BAR:
-                data: List[BarData] = load_bar_data(
+                data: list[BarData] = load_bar_data(
                     self.symbol,
                     self.exchange,
                     self.interval,
@@ -594,7 +595,7 @@ class BacktestingEngine:
         """"""
         d: Date = self.datetime.date()
 
-        daily_result: Optional[DailyResult] = self.daily_results.get(d, None)
+        daily_result: DailyResult | None = self.daily_results.get(d, None)
         if daily_result:
             daily_result.close_price = price
         else:
@@ -790,7 +791,7 @@ class BacktestingEngine:
         interval: Interval,
         callback: Callable,
         use_database: bool
-    ) -> List[BarData]:
+    ) -> list[BarData]:
         """"""
         self.callback = callback
 
@@ -799,7 +800,7 @@ class BacktestingEngine:
 
         symbol, exchange = extract_vt_symbol(vt_symbol)
 
-        bars: List[BarData] = load_bar_data(
+        bars: list[BarData] = load_bar_data(
             symbol,
             exchange,
             interval,
@@ -809,7 +810,7 @@ class BacktestingEngine:
 
         return bars
 
-    def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> List[TickData]:
+    def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> list[TickData]:
         """"""
         self.callback = callback
 
@@ -818,7 +819,7 @@ class BacktestingEngine:
 
         symbol, exchange = extract_vt_symbol(vt_symbol)
 
-        ticks: List[TickData] = load_tick_data(
+        ticks: list[TickData] = load_tick_data(
             symbol,
             exchange,
             init_start,
@@ -1016,7 +1017,7 @@ class DailyResult:
         self.close_price: float = close_price
         self.pre_close: float = 0
 
-        self.trades: List[TradeData] = []
+        self.trades: list[TradeData] = []
         self.trade_count: int = 0
 
         self.start_pos: float = 0
@@ -1088,7 +1089,7 @@ def load_bar_data(
     interval: Interval,
     start: datetime,
     end: datetime
-) -> List[BarData]:
+) -> list[BarData]:
     """"""
     database: BaseDatabase = get_database()
 
@@ -1101,7 +1102,7 @@ def load_tick_data(
     exchange: Exchange,
     start: datetime,
     end: datetime
-) -> List[TickData]:
+) -> list[TickData]:
     """"""
     database: BaseDatabase = get_database()
 
@@ -1110,7 +1111,7 @@ def load_tick_data(
 
 def evaluate(
     target_name: str,
-    strategy_class: Type[CtaTemplate],
+    strategy_class: type[CtaTemplate],
     vt_symbol: str,
     interval: Interval,
     start: datetime,

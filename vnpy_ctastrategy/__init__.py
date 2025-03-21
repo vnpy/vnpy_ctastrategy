@@ -22,7 +22,6 @@
 
 
 from pathlib import Path
-from typing import Type
 
 from vnpy.trader.app import BaseApp
 from vnpy.trader.constant import Direction
@@ -63,6 +62,6 @@ class CtaStrategyApp(BaseApp):
     app_module: str = __module__
     app_path: Path = Path(__file__).parent
     display_name: str = _("CTA策略")
-    engine_class: Type[CtaEngine] = CtaEngine
+    engine_class: type[CtaEngine] = CtaEngine
     widget_name: str = "CtaManager"
     icon_name: str = str(app_path.joinpath("ui", "cta.ico"))

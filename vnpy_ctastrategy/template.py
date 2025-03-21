@@ -1,10 +1,10 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from copy import copy
-from typing import Any, Callable, List, cast
+from typing import Any, cast
+from collections.abc import Callable
 
 from vnpy.trader.constant import Interval, Direction, Offset
 from vnpy.trader.object import BarData, TickData, OrderData, TradeData
-from vnpy.trader.utility import virtual
 
 from .base import StopOrder, EngineType
 
@@ -91,53 +91,54 @@ class CtaTemplate(ABC):
         }
         return strategy_data
 
+    @abstractmethod
     def on_init(self) -> None:
         """
         Callback when strategy is inited.
         """
-        pass
+        return
 
     def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
-        pass
+        return
 
     def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
-        pass
+        return
 
     def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
-        pass
+        return
 
     def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
-        pass
+        return
 
     def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """
-        pass
+        return
 
     def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
-        pass
+        return
 
     def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """
-        pass
+        return
 
     def buy(
         self,
@@ -295,7 +296,7 @@ class CtaTemplate(ABC):
         if not callback:
             callback = self.on_bar
 
-        bars: List[BarData] = self.cta_engine.load_bar(
+        bars: list[BarData] = self.cta_engine.load_bar(
             self.vt_symbol,
             days,
             interval,
@@ -310,7 +311,7 @@ class CtaTemplate(ABC):
         """
         Load historical tick data for initializing strategy.
         """
-        ticks: List[TickData] = self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
+        ticks: list[TickData] = self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
 
         for tick in ticks:
             self.on_tick(tick)
@@ -348,13 +349,14 @@ class CtaSignal(ABC):
         """
         Callback of new tick data update.
         """
-        pass
+        return
 
+    @abstractmethod
     def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
-        pass
+        return
 
     def set_signal_pos(self, pos: int) -> None:
         """"""

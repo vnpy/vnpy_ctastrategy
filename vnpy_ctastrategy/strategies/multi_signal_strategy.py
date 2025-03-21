@@ -180,7 +180,7 @@ class MultiSignalStrategy(TargetPosTemplate):
         """
         Callback of new tick data update.
         """
-        super(MultiSignalStrategy, self).on_tick(tick)
+        super().on_tick(tick)
 
         self.rsi_signal.on_tick(tick)
         self.cci_signal.on_tick(tick)
@@ -192,7 +192,7 @@ class MultiSignalStrategy(TargetPosTemplate):
         """
         Callback of new bar data update.
         """
-        super(MultiSignalStrategy, self).on_bar(bar)
+        super().on_bar(bar)
 
         self.rsi_signal.on_bar(bar)
         self.cci_signal.on_bar(bar)
@@ -216,7 +216,7 @@ class MultiSignalStrategy(TargetPosTemplate):
         """
         Callback of new order data update.
         """
-        super(MultiSignalStrategy, self).on_order(order)
+        super().on_order(order)
 
     def on_trade(self, trade: TradeData) -> None:
         """

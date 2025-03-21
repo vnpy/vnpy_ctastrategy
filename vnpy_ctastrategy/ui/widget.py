@@ -1,5 +1,3 @@
-from typing import Dict
-
 from vnpy.event import Event, EventEngine
 from vnpy.trader.engine import MainEngine
 from vnpy.trader.ui import QtCore, QtGui, QtWidgets
@@ -35,7 +33,7 @@ class CtaManager(QtWidgets.QWidget):
         self.event_engine: EventEngine = event_engine
         self.cta_engine: CtaEngine = main_engine.get_engine(APP_NAME)
 
-        self.managers: Dict[str, StrategyManager] = {}
+        self.managers: dict[str, StrategyManager] = {}
 
         self.init_ui()
         self.register_event()
@@ -208,7 +206,7 @@ class StrategyManager(QtWidgets.QFrame):
         self, cta_manager: CtaManager, cta_engine: CtaEngine, data: dict
     ) -> None:
         """"""
-        super(StrategyManager, self).__init__()
+        super().__init__()
 
         self.cta_manager: CtaManager = cta_manager
         self.cta_engine: CtaEngine = cta_engine
@@ -336,7 +334,7 @@ class DataMonitor(QtWidgets.QTableWidget):
 
     def __init__(self, data: dict) -> None:
         """"""
-        super(DataMonitor, self).__init__()
+        super().__init__()
 
         self._data: dict = data
         self.cells: dict = {}
@@ -423,7 +421,7 @@ class LogMonitor(BaseMonitor):
         """
         Stretch last column.
         """
-        super(LogMonitor, self).init_ui()
+        super().init_ui()
 
         self.horizontalHeader().setSectionResizeMode(
             1, QtWidgets.QHeaderView.ResizeMode.Stretch
@@ -433,7 +431,7 @@ class LogMonitor(BaseMonitor):
         """
         Insert a new row at the top of table.
         """
-        super(LogMonitor, self).insert_new_row(data)
+        super().insert_new_row(data)
         self.resizeRowToContents(0)
 
 
@@ -446,7 +444,7 @@ class SettingEditor(QtWidgets.QDialog):
         self, parameters: dict, strategy_name: str = "", class_name: str = ""
     ) -> None:
         """"""
-        super(SettingEditor, self).__init__()
+        super().__init__()
 
         self.parameters: dict = parameters
         self.strategy_name: str = strategy_name
@@ -512,7 +510,7 @@ class SettingEditor(QtWidgets.QDialog):
             edit, type_ = tp
             value_text = edit.text()
 
-            if type_ == bool:
+            if type_ is bool:
                 if value_text == "True":
                     value = True
                 else:
