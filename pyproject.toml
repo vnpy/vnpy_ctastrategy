@@ -50,10 +50,10 @@ include-package-data = true
 include = ["vnpy_ctastrategy*"]
 
 [tool.hatch.build.hooks.custom]
-path = "vnpy/trader/locale/build_hook.py"
+path = "vnpy_ctastrategy/locale/build_hook.py"
 
 [tool.hatch.build.targets.wheel.force-include]
-"vnpy_ctastrategy/locale/en/LC_MESSAGES/vnpy.mo" = "vnpy_ctastrategy/locale/en/LC_MESSAGES/vnpy.mo"
+"vnpy_ctastrategy/locale/en/LC_MESSAGES/vnpy_ctastrategy.mo" = "vnpy_ctastrategy/locale/en/LC_MESSAGES/vnpy_ctastrategy.mo"
 
 [tool.ruff]
 target-version = "py310"

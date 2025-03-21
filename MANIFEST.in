@@ -1,1 +1,0 @@
-recursive-include vnpy_ctastrategy *.ico *.ini *.dll *.so *.pyd *.h *.hpp *.cpp, *.mo

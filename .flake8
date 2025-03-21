@@ -1,5 +1,0 @@
-[flake8]
-exclude = build,__pycache__,__init__.py
-ignore =
-    E501
-    W503
