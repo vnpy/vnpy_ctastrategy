@@ -15,58 +15,54 @@ class TurtleSignalStrategy(CtaTemplate):
     """"""
     author = "用Python的交易员"
 
-    entry_window = 20
-    exit_window = 10
-    atr_window = 20
-    fixed_size = 1
+    entry_window: int = 20
+    exit_window: int = 10
+    atr_window: int = 20
+    fixed_size: int = 1
 
-    entry_up = 0
-    entry_down = 0
-    exit_up = 0
-    exit_down = 0
-    atr_value = 0
-
-    long_entry = 0
-    short_entry = 0
-    long_stop = 0
-    short_stop = 0
+    entry_up: float = 0
+    entry_down: float = 0
+    exit_up: float = 0
+    exit_down: float = 0
+    atr_value: float = 0
+    long_entry: float = 0
+    short_entry: float = 0
+    long_stop: float = 0
+    short_stop: float = 0
 
     parameters = ["entry_window", "exit_window", "atr_window", "fixed_size"]
     variables = ["entry_up", "entry_down", "exit_up", "exit_down", "atr_value"]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
-        """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
-
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
-
-    def on_init(self):
+    def on_init(self) -> None:
         """
         Callback when strategy is inited.
         """
         self.write_log("策略初始化")
+
+        self.bg = BarGenerator(self.on_bar)
+        self.am = ArrayManager()
+
         self.load_bar(20)
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
         self.write_log("策略启动")
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
         self.write_log("策略停止")
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
@@ -108,7 +104,7 @@ class TurtleSignalStrategy(CtaTemplate):
 
         self.put_event()
 
-    def on_trade(self, trade: TradeData):
+    def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """
@@ -119,21 +115,21 @@ class TurtleSignalStrategy(CtaTemplate):
             self.short_entry = trade.price
             self.short_stop = self.short_entry + 2 * self.atr_value
 
-    def on_order(self, order: OrderData):
+    def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
         pass
 
-    def on_stop_order(self, stop_order: StopOrder):
+    def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """
         pass
 
-    def send_buy_orders(self, price):
+    def send_buy_orders(self, price: float) -> None:
         """"""
-        t = self.pos / self.fixed_size
+        t: float = self.pos / self.fixed_size
 
         if t < 1:
             self.buy(price, self.fixed_size, True)
@@ -147,9 +143,9 @@ class TurtleSignalStrategy(CtaTemplate):
         if t < 4:
             self.buy(price + self.atr_value * 1.5, self.fixed_size, True)
 
-    def send_short_orders(self, price):
+    def send_short_orders(self, price: float) -> None:
         """"""
-        t = self.pos / self.fixed_size
+        t: float = self.pos / self.fixed_size
 
         if t > -1:
             self.short(price, self.fixed_size, True)

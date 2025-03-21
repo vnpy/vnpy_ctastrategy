@@ -14,18 +14,18 @@ class MultiTimeframeStrategy(CtaTemplate):
     """"""
     author = "用Python的交易员"
 
-    rsi_signal = 20
-    rsi_window = 14
-    fast_window = 5
-    slow_window = 20
-    fixed_size = 1
+    rsi_signal: int = 20
+    rsi_window: int = 14
+    fast_window: int = 5
+    slow_window: int = 20
+    fixed_size: int = 1
 
-    rsi_value = 0
-    rsi_long = 0
-    rsi_short = 0
-    fast_ma = 0
-    slow_ma = 0
-    ma_trend = 0
+    rsi_value: float = 0
+    rsi_long: float = 0
+    rsi_short: float = 0
+    fast_ma: float = 0
+    slow_ma: float = 0
+    ma_trend: float = 0
 
     parameters = ["rsi_signal", "rsi_window",
                   "fast_window", "slow_window",
@@ -34,9 +34,11 @@ class MultiTimeframeStrategy(CtaTemplate):
     variables = ["rsi_value", "rsi_long", "rsi_short",
                  "fast_ma", "slow_ma", "ma_trend"]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
-        """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
+    def on_init(self) -> None:
+        """
+        Callback when strategy is inited.
+        """
+        self.write_log("策略初始化")
 
         self.rsi_long = 50 + self.rsi_signal
         self.rsi_short = 50 - self.rsi_signal
@@ -47,39 +49,34 @@ class MultiTimeframeStrategy(CtaTemplate):
         self.bg15 = BarGenerator(self.on_bar, 15, self.on_15min_bar)
         self.am15 = ArrayManager()
 
-    def on_init(self):
-        """
-        Callback when strategy is inited.
-        """
-        self.write_log("策略初始化")
         self.load_bar(10)
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
         self.write_log("策略启动")
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
         self.write_log("策略停止")
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg5.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
         self.bg5.update_bar(bar)
         self.bg15.update_bar(bar)
 
-    def on_5min_bar(self, bar: BarData):
+    def on_5min_bar(self, bar: BarData) -> None:
         """"""
         self.cancel_all()
 
@@ -108,7 +105,7 @@ class MultiTimeframeStrategy(CtaTemplate):
 
         self.put_event()
 
-    def on_15min_bar(self, bar: BarData):
+    def on_15min_bar(self, bar: BarData) -> None:
         """"""
         self.am15.update_bar(bar)
         if not self.am15.inited:
@@ -122,19 +119,19 @@ class MultiTimeframeStrategy(CtaTemplate):
         else:
             self.ma_trend = -1
 
-    def on_order(self, order: OrderData):
+    def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
         pass
 
-    def on_trade(self, trade: TradeData):
+    def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """
         self.put_event()
 
-    def on_stop_order(self, stop_order: StopOrder):
+    def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """

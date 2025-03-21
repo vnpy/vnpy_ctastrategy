@@ -15,20 +15,20 @@ class AtrRsiStrategy(CtaTemplate):
 
     author = "用Python的交易员"
 
-    atr_length = 22
-    atr_ma_length = 10
-    rsi_length = 5
-    rsi_entry = 16
-    trailing_percent = 0.8
-    fixed_size = 1
+    atr_length: int = 22
+    atr_ma_length: int = 10
+    rsi_length: int = 5
+    rsi_entry: int = 16
+    trailing_percent: float = 0.8
+    fixed_size: int = 1
 
-    atr_value = 0
-    atr_ma = 0
-    rsi_value = 0
-    rsi_buy = 0
-    rsi_sell = 0
-    intra_trade_high = 0
-    intra_trade_low = 0
+    atr_value: float = 0
+    atr_ma: float = 0
+    rsi_value: float = 0
+    rsi_buy: float = 0
+    rsi_sell: float = 0
+    intra_trade_high: float = 0
+    intra_trade_low: float = 0
 
     parameters = [
         "atr_length",
@@ -48,42 +48,39 @@ class AtrRsiStrategy(CtaTemplate):
         "intra_trade_low"
     ]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
-        """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
-
-    def on_init(self):
+    def on_init(self) -> None:
         """
         Callback when strategy is inited.
         """
         self.write_log("策略初始化")
+
+        self.bg = BarGenerator(self.on_bar)
+        self.am = ArrayManager()
 
         self.rsi_buy = 50 + self.rsi_entry
         self.rsi_sell = 50 - self.rsi_entry
 
         self.load_bar(10)
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
         self.write_log("策略启动")
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
         self.write_log("策略停止")
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
@@ -127,19 +124,19 @@ class AtrRsiStrategy(CtaTemplate):
 
         self.put_event()
 
-    def on_order(self, order: OrderData):
+    def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
         pass
 
-    def on_trade(self, trade: TradeData):
+    def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """
         self.put_event()
 
-    def on_stop_order(self, stop_order: StopOrder):
+    def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """

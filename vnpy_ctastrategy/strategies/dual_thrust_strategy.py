@@ -16,61 +16,55 @@ class DualThrustStrategy(CtaTemplate):
 
     author = "用Python的交易员"
 
-    fixed_size = 1
-    k1 = 0.4
-    k2 = 0.6
+    fixed_size: int = 1
+    k1: float = 0.4
+    k2: float = 0.6
 
-    bars = []
-
-    day_open = 0
-    day_high = 0
-    day_low = 0
-
-    day_range = 0
-    long_entry = 0
-    short_entry = 0
-    exit_time = time(hour=14, minute=55)
-
-    long_entered = False
-    short_entered = False
+    day_open: float = 0
+    day_high: float = 0
+    day_low: float = 0
+    day_range: float = 0
+    long_entry: float = 0
+    short_entry: float = 0
+    long_entered: bool = False
+    short_entered: bool = False
 
     parameters = ["k1", "k2", "fixed_size"]
     variables = ["day_range", "long_entry", "short_entry"]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
-        """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
-
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
-        self.bars = []
-
-    def on_init(self):
+    def on_init(self) -> None:
         """
         Callback when strategy is inited.
         """
         self.write_log("策略初始化")
+
+        self.bg: BarGenerator = BarGenerator(self.on_bar)
+        self.am: ArrayManager = ArrayManager()
+
+        self.bars: list[BarData] = []
+        self.exit_time: time = time(hour=14, minute=55)
+
         self.load_bar(10)
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
         self.write_log("策略启动")
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
         self.write_log("策略停止")
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
@@ -136,13 +130,13 @@ class DualThrustStrategy(CtaTemplate):
 
         self.put_event()
 
-    def on_order(self, order: OrderData):
+    def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
         pass
 
-    def on_trade(self, trade: TradeData):
+    def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """

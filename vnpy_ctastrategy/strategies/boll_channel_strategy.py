@@ -15,22 +15,21 @@ class BollChannelStrategy(CtaTemplate):
 
     author = "用Python的交易员"
 
-    boll_window = 18
-    boll_dev = 3.4
-    cci_window = 10
-    atr_window = 30
-    sl_multiplier = 5.2
-    fixed_size = 1
+    boll_window: float = 18
+    boll_dev: float = 3.4
+    cci_window: int = 10
+    atr_window: int = 30
+    sl_multiplier: float = 5.2
+    fixed_size: int = 1
 
-    boll_up = 0
-    boll_down = 0
-    cci_value = 0
-    atr_value = 0
-
-    intra_trade_high = 0
-    intra_trade_low = 0
-    long_stop = 0
-    short_stop = 0
+    boll_up: float = 0
+    boll_down: float = 0
+    cci_value: float = 0
+    atr_value: float = 0
+    intra_trade_high: float = 0
+    intra_trade_low: float = 0
+    long_stop: float = 0
+    short_stop: float = 0
 
     parameters = [
         "boll_window",
@@ -51,45 +50,42 @@ class BollChannelStrategy(CtaTemplate):
         "short_stop"
     ]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
-        """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
-
-        self.bg = BarGenerator(self.on_bar, 15, self.on_15min_bar)
-        self.am = ArrayManager()
-
-    def on_init(self):
+    def on_init(self) -> None:
         """
         Callback when strategy is inited.
         """
         self.write_log("策略初始化")
+
+        self.bg = BarGenerator(self.on_bar, 15, self.on_15min_bar)
+        self.am = ArrayManager()
+
         self.load_bar(10)
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
         self.write_log("策略启动")
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
         self.write_log("策略停止")
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
         self.bg.update_bar(bar)
 
-    def on_15min_bar(self, bar: BarData):
+    def on_15min_bar(self, bar: BarData) -> None:
         """"""
         self.cancel_all()
 
@@ -127,19 +123,19 @@ class BollChannelStrategy(CtaTemplate):
 
         self.put_event()
 
-    def on_order(self, order: OrderData):
+    def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
         pass
 
-    def on_trade(self, trade: TradeData):
+    def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """
         self.put_event()
 
-    def on_stop_order(self, stop_order: StopOrder):
+    def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """

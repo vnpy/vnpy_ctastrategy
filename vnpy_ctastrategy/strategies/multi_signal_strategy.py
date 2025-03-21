@@ -26,13 +26,13 @@ class RsiSignal(CtaSignal):
         self.bg = BarGenerator(self.on_bar)
         self.am = ArrayManager()
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
@@ -65,13 +65,13 @@ class CciSignal(CtaSignal):
         self.bg = BarGenerator(self.on_bar)
         self.am = ArrayManager()
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
@@ -102,19 +102,19 @@ class MaSignal(CtaSignal):
         self.bg = BarGenerator(self.on_bar, 5, self.on_5min_bar)
         self.am = ArrayManager()
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
         self.bg.update_tick(tick)
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
         self.bg.update_bar(bar)
 
-    def on_5min_bar(self, bar: BarData):
+    def on_5min_bar(self, bar: BarData) -> None:
         """"""
         self.am.update_bar(bar)
         if not self.am.inited:
@@ -136,53 +136,47 @@ class MultiSignalStrategy(TargetPosTemplate):
 
     author = "用Python的交易员"
 
-    rsi_window = 14
-    rsi_level = 20
-    cci_window = 30
-    cci_level = 10
-    fast_window = 5
-    slow_window = 20
-
-    signal_pos = {}
+    rsi_window: int = 14
+    rsi_level: int = 20
+    cci_window: int = 30
+    cci_level: int = 10
+    fast_window: int = 5
+    slow_window: int = 20
 
     parameters = ["rsi_window", "rsi_level", "cci_window",
                   "cci_level", "fast_window", "slow_window"]
-    variables = ["signal_pos"]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
-        """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
+    def on_init(self) -> None:
+        """
+        Callback when strategy is inited.
+        """
+        self.write_log("策略初始化")
 
-        self.rsi_signal = RsiSignal(self.rsi_window, self.rsi_level)
-        self.cci_signal = CciSignal(self.cci_window, self.cci_level)
-        self.ma_signal = MaSignal(self.fast_window, self.slow_window)
+        self.rsi_signal: RsiSignal = RsiSignal(self.rsi_window, self.rsi_level)
+        self.cci_signal: CciSignal = CciSignal(self.cci_window, self.cci_level)
+        self.ma_signal: MaSignal = MaSignal(self.fast_window, self.slow_window)
 
-        self.signal_pos = {
+        self.signal_pos: dict[str, int] = {
             "rsi": 0,
             "cci": 0,
             "ma": 0
         }
 
-    def on_init(self):
-        """
-        Callback when strategy is inited.
-        """
-        self.write_log("策略初始化")
         self.load_bar(10)
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Callback when strategy is started.
         """
         self.write_log("策略启动")
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Callback when strategy is stopped.
         """
         self.write_log("策略停止")
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData) -> None:
         """
         Callback of new tick data update.
         """
@@ -194,7 +188,7 @@ class MultiSignalStrategy(TargetPosTemplate):
 
         self.calculate_target_pos()
 
-    def on_bar(self, bar: BarData):
+    def on_bar(self, bar: BarData) -> None:
         """
         Callback of new bar data update.
         """
@@ -206,7 +200,7 @@ class MultiSignalStrategy(TargetPosTemplate):
 
         self.calculate_target_pos()
 
-    def calculate_target_pos(self):
+    def calculate_target_pos(self) -> None:
         """"""
         self.signal_pos["rsi"] = self.rsi_signal.get_signal_pos()
         self.signal_pos["cci"] = self.cci_signal.get_signal_pos()
@@ -218,19 +212,19 @@ class MultiSignalStrategy(TargetPosTemplate):
 
         self.set_target_pos(target_pos)
 
-    def on_order(self, order: OrderData):
+    def on_order(self, order: OrderData) -> None:
         """
         Callback of new order data update.
         """
         super(MultiSignalStrategy, self).on_order(order)
 
-    def on_trade(self, trade: TradeData):
+    def on_trade(self, trade: TradeData) -> None:
         """
         Callback of new trade data update.
         """
         self.put_event()
 
-    def on_stop_order(self, stop_order: StopOrder):
+    def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """
