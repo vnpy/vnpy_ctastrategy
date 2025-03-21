@@ -158,7 +158,7 @@ class CtaEngine(BaseEngine):
         """"""
         order: OrderData = event.data
 
-        strategy: Optional[type] = self.orderid_strategy_map.get(order.vt_orderid, None)
+        strategy: Optional[CtaTemplate] = self.orderid_strategy_map.get(order.vt_orderid, None)
         if not strategy:
             return
 
@@ -195,7 +195,7 @@ class CtaEngine(BaseEngine):
             return
         self.vt_tradeids.add(trade.vt_tradeid)
 
-        strategy: Optional[type] = self.orderid_strategy_map.get(trade.vt_orderid, None)
+        strategy: Optional[CtaTemplate] = self.orderid_strategy_map.get(trade.vt_orderid, None)
         if not strategy:
             return
 
@@ -442,7 +442,7 @@ class CtaEngine(BaseEngine):
         stop_order: Optional[StopOrder] = self.stop_orders.get(stop_orderid, None)
         if not stop_order:
             return
-        strategy: CtaTemplate = self.strategies[stop_order.strategy_name]
+        strategy = self.strategies[stop_order.strategy_name]
 
         # Remove from relation map.
         self.stop_orders.pop(stop_orderid)
@@ -473,11 +473,11 @@ class CtaEngine(BaseEngine):
         contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
         if not contract:
             self.write_log(_("委托失败，找不到合约：{}").format(strategy.vt_symbol), strategy)
-            return ""
+            return []
 
         # Round order price and volume to nearest incremental value
-        price: float = round_to(price, contract.pricetick)
-        volume: float = round_to(volume, contract.min_volume)
+        price = round_to(price, contract.pricetick)
+        volume = round_to(volume, contract.min_volume)
 
         if stop:
             if contract.stop_supported:
@@ -516,25 +516,25 @@ class CtaEngine(BaseEngine):
         """"""
         return self.engine_type
 
-    def get_pricetick(self, strategy: CtaTemplate) -> float:
+    def get_pricetick(self, strategy: CtaTemplate) -> float | None:
         """
         Return contract pricetick data.
         """
         contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
 
         if contract:
-            return contract.pricetick
+            return contract.pricetick       # type: ignore
         else:
             return None
 
-    def get_size(self, strategy: CtaTemplate) -> int:
+    def get_size(self, strategy: CtaTemplate) -> int | None:
         """
         Return contract size data.
         """
         contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
 
         if contract:
-            return contract.size
+            return contract.size       # type: ignore
         else:
             return None
 
@@ -565,14 +565,14 @@ class CtaEngine(BaseEngine):
                     start=start,
                     end=end
                 )
-                bars: List[BarData] = self.main_engine.query_history(req, contract.gateway_name)
+                bars = self.main_engine.query_history(req, contract.gateway_name)
 
             # Try to query bars from datafeed, if not found, load from database.
             else:
-                bars: List[BarData] = self.query_bar_from_datafeed(symbol, exchange, interval, start, end)
+                bars = self.query_bar_from_datafeed(symbol, exchange, interval, start, end)
 
         if not bars:
-            bars: List[BarData] = self.database.load_bar_data(
+            bars = self.database.load_bar_data(
                 symbol=symbol,
                 exchange=exchange,
                 interval=interval,
@@ -757,7 +757,7 @@ class CtaEngine(BaseEngine):
         strategy: CtaTemplate = self.strategies[strategy_name]
         if strategy.trading:
             self.write_log(_("策略{}移除失败，请先停止").format(strategy.strategy_name))
-            return
+            return False
 
         # Remove setting
         self.remove_strategy_setting(strategy_name)
@@ -859,7 +859,7 @@ class CtaEngine(BaseEngine):
 
         return parameters
 
-    def get_strategy_parameters(self, strategy_name) -> dict:
+    def get_strategy_parameters(self, strategy_name: str) -> dict:
         """
         Get parameters of a strategy.
         """
@@ -941,24 +941,24 @@ class CtaEngine(BaseEngine):
         event: Event = Event(EVENT_CTA_STRATEGY, data)
         self.event_engine.put(event)
 
-    def write_log(self, msg: str, strategy: CtaTemplate = None) -> None:
+    def write_log(self, msg: str, strategy: CtaTemplate | None = None) -> None:
         """
         Create cta engine log event.
         """
         if strategy:
-            msg: str = f"[{strategy.strategy_name}]  {msg}"
+            msg = f"[{strategy.strategy_name}]  {msg}"
 
         log: LogData = LogData(msg=msg, gateway_name=APP_NAME)
         event: Event = Event(type=EVENT_CTA_LOG, data=log)
         self.event_engine.put(event)
 
-    def send_email(self, msg: str, strategy: CtaTemplate = None) -> None:
+    def send_email(self, msg: str, strategy: CtaTemplate | None = None) -> None:
         """
         Send email to default receiver.
         """
         if strategy:
             subject: str = f"{strategy.strategy_name}"
         else:
-            subject: str = _("CTA策略引擎")
+            subject = _("CTA策略引擎")
 
         self.main_engine.send_email(subject, msg)

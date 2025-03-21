@@ -75,7 +75,7 @@ class RolloverTool(QtWidgets.QDialog):
     def write_log(self, text: str) -> None:
         """"""
         now: datetime = datetime.now()
-        text: str = now.strftime("%H:%M:%S\t") + text
+        text = now.strftime("%H:%M:%S\t") + text
         self.log_edit.append(text)
 
     def subscribe(self, vt_symbol: str) -> None:
@@ -151,7 +151,7 @@ class RolloverTool(QtWidgets.QDialog):
 
         # Roll short postiion
         if holding.short_pos:
-            volume: float = holding.short_pos
+            volume = holding.short_pos
 
             self.send_order(
                 old_symbol,
@@ -221,13 +221,16 @@ class RolloverTool(QtWidgets.QDialog):
         contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
         tick: Optional[TickData] = self.main_engine.get_tick(vt_symbol)
 
+        if not contract or not tick:
+            return
+
         if direction == Direction.LONG:
             price = tick.ask_price_1 + contract.pricetick * payup
         else:
             price = tick.bid_price_1 - contract.pricetick * payup
 
         while True:
-            order_volume: int = min(volume, max_volume)
+            order_volume: float = min(volume, max_volume)
 
             original_req: OrderRequest = OrderRequest(
                 symbol=contract.symbol,

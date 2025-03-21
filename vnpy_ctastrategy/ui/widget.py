@@ -135,7 +135,7 @@ class CtaManager(QtWidgets.QWidget):
             EVENT_CTA_STRATEGY, self.signal_strategy.emit
         )
 
-    def process_strategy_event(self, event) -> None:
+    def process_strategy_event(self, event: Event) -> None:
         """
         Update strategy status onto its monitor.
         """
@@ -146,13 +146,13 @@ class CtaManager(QtWidgets.QWidget):
             manager: StrategyManager = self.managers[strategy_name]
             manager.update_data(data)
         else:
-            manager: StrategyManager = StrategyManager(self, self.cta_engine, data)
+            manager = StrategyManager(self, self.cta_engine, data)
             self.scroll_layout.insertWidget(0, manager)
             self.managers[strategy_name] = manager
 
             self.update_strategy_combo()
 
-    def remove_strategy(self, strategy_name) -> None:
+    def remove_strategy(self, strategy_name: str) -> None:
         """"""
         manager: StrategyManager = self.managers.pop(strategy_name)
         manager.deleteLater()
@@ -277,7 +277,7 @@ class StrategyManager(QtWidgets.QFrame):
         self.variables_monitor.update_data(data["variables"])
 
         # Update button status
-        variables: list = data["variables"]
+        variables: dict = data["variables"]
         inited: bool = variables["inited"]
         trading: bool = variables["trading"]
 
@@ -429,7 +429,7 @@ class LogMonitor(BaseMonitor):
             1, QtWidgets.QHeaderView.ResizeMode.Stretch
         )
 
-    def insert_new_row(self, data) -> None:
+    def insert_new_row(self, data: dict) -> None:
         """
         Insert a new row at the top of table.
         """
@@ -468,19 +468,19 @@ class SettingEditor(QtWidgets.QDialog):
             parameters.update(self.parameters)
         else:
             self.setWindowTitle(_("参数编辑：{}").format(self.strategy_name))
-            button_text: str = _("确定")
-            parameters: dict = self.parameters
+            button_text = _("确定")
+            parameters = self.parameters
 
         for name, value in parameters.items():
             type_: type = type(value)
 
             edit: QtWidgets.QLineEdit = QtWidgets.QLineEdit(str(value))
             if type_ is int:
-                validator: QtGui.QIntValidator = QtGui.QIntValidator()
-                edit.setValidator(validator)
+                int_validator: QtGui.QIntValidator = QtGui.QIntValidator()
+                edit.setValidator(int_validator)
             elif type_ is float:
-                validator: QtGui.QDoubleValidator = QtGui.QDoubleValidator()
-                edit.setValidator(validator)
+                double_validator: QtGui.QDoubleValidator = QtGui.QDoubleValidator()
+                edit.setValidator(double_validator)
 
             form.addRow(f"{name} {type_}", edit)
 
