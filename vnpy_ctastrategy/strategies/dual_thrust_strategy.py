@@ -142,7 +142,7 @@ class DualThrustStrategy(CtaTemplate):
         """
         self.put_event()
 
-    def on_stop_order(self, stop_order: StopOrder):
+    def on_stop_order(self, stop_order: StopOrder) -> None:
         """
         Callback of stop order update.
         """
