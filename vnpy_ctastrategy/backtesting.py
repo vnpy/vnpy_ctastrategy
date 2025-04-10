@@ -300,7 +300,7 @@ class BacktestingEngine:
 
         # Check DataFrame input exterior
         if df is None:
-            if not self.daily_df:
+            if self.daily_df.empty:
                 self.output(_("回测结果为空，无法计算绩效统计指标"))
                 return {}
 
