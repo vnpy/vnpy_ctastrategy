@@ -71,7 +71,7 @@ class BacktestingEngine:
         self.strategy: CtaTemplate
         self.tick: TickData
         self.bar: BarData
-        self.datetime: datetime | None = None
+        self.datetime: datetime = datetime(1970, 1, 1)
 
         self.interval: Interval
         self.days: int = 0
