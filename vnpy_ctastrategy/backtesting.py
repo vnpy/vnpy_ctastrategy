@@ -373,7 +373,7 @@ class BacktestingEngine:
             max_drawdown_end = df["drawdown"].idxmin()
 
             if isinstance(max_drawdown_end, Date):
-                max_drawdown_start = df["balance"][:max_drawdown_end].idxmax()
+                max_drawdown_start = df["balance"][:max_drawdown_end].idxmax()      # type: ignore
                 max_drawdown_duration = (max_drawdown_end - max_drawdown_start).days
             else:
                 max_drawdown_duration = 0
