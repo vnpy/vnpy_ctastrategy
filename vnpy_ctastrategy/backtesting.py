@@ -568,7 +568,13 @@ class BacktestingEngine:
         optimization_setting: OptimizationSetting,
         output: bool = True,
         max_workers: int | None = None,
-        ngen_size: int = 30
+        pop_size: int = 100,
+        ngen: int = 30,
+        mu: int | None = None,
+        lambda_: int | None = None,
+        cxpb: float = 0.95,
+        mutpb: float | None = None,
+        indpb: float = 1.0
     ) -> list:
         """"""
         if not check_optimization_setting(optimization_setting):
@@ -580,7 +586,13 @@ class BacktestingEngine:
             optimization_setting,
             get_target_value,
             max_workers=max_workers,
-            ngen_size=ngen_size,
+            pop_size=pop_size,
+            ngen=ngen,
+            mu=mu,
+            lambda_=lambda_,
+            cxpb=cxpb,
+            mutpb=mutpb,
+            indpb=indpb,
             output=self.output
         )
 
