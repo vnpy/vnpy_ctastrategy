@@ -92,7 +92,7 @@ class BacktestingEngine:
         self.logs: list = []
 
         self.daily_results: dict[Date, DailyResult] = {}
-        self.daily_df: DataFrame
+        self.daily_df: DataFrame = DataFrame()
 
     def clear_data(self) -> None:
         """
@@ -285,7 +285,8 @@ class BacktestingEngine:
             for key, value in daily_result.__dict__.items():
                 results[key].append(value)
 
-        self.daily_df = DataFrame.from_dict(results).set_index("date")
+        if results:
+            self.daily_df = DataFrame.from_dict(results).set_index("date")
 
         self.output(_("逐日盯市盈亏计算完成"))
         return self.daily_df
@@ -491,7 +492,6 @@ class BacktestingEngine:
         self.output(_("策略统计指标计算完成"))
         return statistics
 
-    # def show_chart(self, df: DataFrame = None) -> None:
     def show_chart(self, df: DataFrame | None = None) -> go.Figure:
         """"""
         # Check DataFrame input exterior
@@ -499,7 +499,7 @@ class BacktestingEngine:
             df = self.daily_df
 
         # Check for init DataFrame
-        if df is None:
+        if df.empty:
             return
 
         fig = make_subplots(
@@ -1160,7 +1160,7 @@ def evaluate(
     engine.calculate_result()
     statistics: dict = engine.calculate_statistics(output=False)
 
-    target_value: float = statistics[target_name]
+    target_value: float = statistics.get(target_name, 0)
     return (setting, target_value, statistics)
 
 
