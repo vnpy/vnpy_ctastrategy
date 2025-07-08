@@ -56,7 +56,7 @@ __version__ = "1.3.2"
 
 class CtaStrategyApp(BaseApp):
     """"""
-    from .locale import _
+    from .i18n import _
 
     app_name: str = APP_NAME
     app_module: str = __module__

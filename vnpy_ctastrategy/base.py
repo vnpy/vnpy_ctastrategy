@@ -7,7 +7,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 
 from vnpy.trader.constant import Direction, Offset, Interval
-from .locale import _
+from .i18n import _
 
 APP_NAME = "CtaStrategy"
 STOPORDER_PREFIX = "STOP"
