@@ -12,7 +12,7 @@ from vnpy.trader.converter import OffsetConverter, PositionHolding
 
 from ..engine import CtaEngine, APP_NAME
 from ..template import CtaTemplate
-from ..locale import _
+from ..i18n import _
 
 if TYPE_CHECKING:
     from .widget import CtaManager

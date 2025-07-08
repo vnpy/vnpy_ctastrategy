@@ -15,7 +15,7 @@ from ..base import (
     EVENT_CTA_STRATEGY
 )
 from ..engine import CtaEngine
-from ..locale import _
+from ..i18n import _
 from .rollover import RolloverTool
 
 

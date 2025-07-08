@@ -53,7 +53,7 @@ from .base import (
     STOPORDER_PREFIX
 )
 from .template import CtaTemplate, TargetPosTemplate
-from .locale import _
+from .i18n import _
 
 # 停止单状态映射
 STOP_STATUS_MAP: dict[Status, StopOrderStatus] = {
