@@ -897,8 +897,6 @@ class CtaEngine(BaseEngine):
         self.strategy_setting = load_json(self.setting_filename)
 
         for strategy_name, strategy_config in self.strategy_setting.items():
-            if strategy_name in self.strategies:
-                continue
             self.add_strategy(
                 strategy_config["class_name"],
                 strategy_name,
