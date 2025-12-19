@@ -14,6 +14,7 @@ from pandas import DataFrame, Series
 from pandas.core.window import ExponentialMovingWindow
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import empyrical as ep
 
 from vnpy.trader.constant import (
     Direction,
@@ -334,6 +335,7 @@ class BacktestingEngine:
         sharpe_ratio: float = 0
         ewm_sharpe: float = 0
         return_drawdown_ratio: float = 0
+        rgr: float = 0
 
         # Check if balance is always positive
         positive_balance: bool = False
@@ -416,6 +418,30 @@ class BacktestingEngine:
             else:
                 return_drawdown_ratio = 0
 
+            # Calculate GRR indicator
+            cagr_value: float = annual_return / 100
+
+            if return_std > 0:
+                stability_return: float = 1 / (1 + return_std / 100)
+            else:
+                stability_return = 0
+
+            returns_series: Series = df["return"]
+            annual_downside_risk: float = ep.downside_risk(returns_series, required_return=0, period='daily')
+            return_skew: float = returns_series.skew()
+            return_kurt: float = returns_series.kurt()
+            cvar_95: float = ep.conditional_value_at_risk(returns_series, cutoff=0.05)
+
+            rgr = calc_rgr(
+                cagr_value,
+                stability_return,
+                annual_downside_risk,
+                max_ddpercent,
+                return_skew,
+                return_kurt,
+                cvar_95
+            )
+
         # Output
         if output:
             self.output("-" * 30)
@@ -452,6 +478,7 @@ class BacktestingEngine:
             self.output(f"Sharpe Ratio：\t{sharpe_ratio:,.2f}")
             self.output(f"EWM Sharpe：\t{ewm_sharpe:,.2f}")
             self.output(_("收益回撤比：\t{:,.2f}").format(return_drawdown_ratio))
+            self.output(f"RGR指标：\t{rgr:,.2f}")
 
         statistics: dict = {
             "start_date": start_date,
@@ -481,6 +508,7 @@ class BacktestingEngine:
             "sharpe_ratio": sharpe_ratio,
             "ewm_sharpe": ewm_sharpe,
             "return_drawdown_ratio": return_drawdown_ratio,
+            "rgr": rgr,
         }
 
         # Filter potential error infinite value
@@ -1184,6 +1212,47 @@ def wrap_evaluate(engine: BacktestingEngine, target_name: str) -> Callable:
         engine.mode
     )
     return func
+
+
+def calc_rgr(
+    cagr_value: float,
+    stability_return: float,
+    annual_downside_risk: float,
+    max_drawdown_percent: float,
+    return_skew: float,
+    return_kurt: float,
+    c_var: float
+) -> float:
+    """"""
+    # Apply log for diminishing marginal utility
+    if cagr_value > 0:
+        gain: float = np.log(1 + cagr_value)
+    else:
+        gain = -np.log(1 - cagr_value)
+
+    # Skewness adjustment factor
+    skew_factor: float = 1 + 0.1 * np.tanh(return_skew)
+
+    # Kurtosis penalty for fat tail
+    kurt_factor: float = 1 / (1 + 0.05 * max(return_kurt - 3, 0))
+
+    # Combined risk calculation
+    downside_risk: float = max(annual_downside_risk, 1e-6)
+    max_dd: float = abs(max_drawdown_percent) / 100.0
+    if c_var != 0:
+        cvar_risk: float = abs(c_var)
+    else:
+        cvar_risk = max_dd * 0.5
+    combined_risk: float = 0.5 * downside_risk + 0.3 * max_dd + 0.2 * cvar_risk
+
+    # Prevent division by zero
+    if combined_risk < 1e-9:
+        combined_risk = 1e-9
+
+    # Final RGR calculation
+    rgr: float = (gain * stability_return * skew_factor * kurt_factor) / combined_risk
+
+    return rgr
 
 
 def get_target_value(result: list) -> float:
