@@ -15,7 +15,7 @@ class BollChannelStrategy(CtaTemplate):
 
     author = "用Python的交易员"
 
-    boll_window: float = 18
+    boll_window: int = 18
     boll_dev: float = 3.4
     cci_window: int = 10
     atr_window: int = 30

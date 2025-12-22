@@ -40,14 +40,14 @@ class MultiTimeframeStrategy(CtaTemplate):
         """
         self.write_log("策略初始化")
 
-        self.rsi_long = 50 + self.rsi_signal
-        self.rsi_short = 50 - self.rsi_signal
+        self.rsi_long: float = 50 + self.rsi_signal
+        self.rsi_short: float = 50 - self.rsi_signal
 
-        self.bg5 = BarGenerator(self.on_bar, 5, self.on_5min_bar)
-        self.am5 = ArrayManager()
+        self.bg5: BarGenerator = BarGenerator(self.on_bar, 5, self.on_5min_bar)
+        self.am5: ArrayManager = ArrayManager()
 
-        self.bg15 = BarGenerator(self.on_bar, 15, self.on_15min_bar)
-        self.am15 = ArrayManager()
+        self.bg15: BarGenerator = BarGenerator(self.on_bar, 15, self.on_15min_bar)
+        self.am15: ArrayManager = ArrayManager()
 
         self.load_bar(10)
 

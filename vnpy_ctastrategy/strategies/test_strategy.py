@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from time import time
+
 from vnpy_ctastrategy import (
     CtaTemplate,
     StopOrder,
@@ -6,8 +9,6 @@ from vnpy_ctastrategy import (
     TradeData,
     OrderData
 )
-
-from time import time
 
 
 class TestStrategy(CtaTemplate):
@@ -28,7 +29,7 @@ class TestStrategy(CtaTemplate):
         """
         self.write_log("策略初始化")
 
-        self.test_funcs = [
+        self.test_funcs: list[Callable[[], None]] = [
             self.test_market_order,
             self.test_limit_order,
             self.test_cancel_all,
@@ -63,11 +64,11 @@ class TestStrategy(CtaTemplate):
             self.tick_count = 0
 
             if self.test_funcs:
-                test_func = self.test_funcs.pop(0)
+                test_func: Callable[[], None] = self.test_funcs.pop(0)
 
-                start = time()
+                start: float = time()
                 test_func()
-                time_cost = (time() - start) * 1000
+                time_cost: float = (time() - start) * 1000
                 self.write_log(f"耗时{time_cost}毫秒")
             else:
                 self.write_log("测试已全部完成")

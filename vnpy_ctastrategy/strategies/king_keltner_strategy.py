@@ -73,7 +73,7 @@ class KingKeltnerStrategy(CtaTemplate):
             self.cancel_order(orderid)
         self.vt_orderids.clear()
 
-        am = self.am
+        am: ArrayManager = self.am
         am.update_bar(bar)
         if not am.inited:
             return
@@ -89,17 +89,23 @@ class KingKeltnerStrategy(CtaTemplate):
             self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
             self.intra_trade_low = bar.low_price
 
-            vt_orderids = self.sell(self.intra_trade_high * (1 - self.trailing_percent / 100),
-                                    abs(self.pos), True)
-            self.vt_orderids.extend(vt_orderids)
+            sell_orderids: list[str] = self.sell(
+                self.intra_trade_high * (1 - self.trailing_percent / 100),
+                abs(self.pos),
+                True
+            )
+            self.vt_orderids.extend(sell_orderids)
 
         elif self.pos < 0:
             self.intra_trade_high = bar.high_price
             self.intra_trade_low = min(self.intra_trade_low, bar.low_price)
 
-            vt_orderids = self.cover(self.intra_trade_low * (1 + self.trailing_percent / 100),
-                                     abs(self.pos), True)
-            self.vt_orderids.extend(vt_orderids)
+            cover_orderids: list[str] = self.cover(
+                self.intra_trade_low * (1 + self.trailing_percent / 100),
+                abs(self.pos),
+                True
+            )
+            self.vt_orderids.extend(cover_orderids)
 
         self.put_event()
 

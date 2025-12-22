@@ -14,17 +14,17 @@ from vnpy_ctastrategy import (
 class RsiSignal(CtaSignal):
     """"""
 
-    def __init__(self, rsi_window: int, rsi_level: float):
+    def __init__(self, rsi_window: int, rsi_level: float) -> None:
         """Constructor"""
         super().__init__()
 
-        self.rsi_window = rsi_window
-        self.rsi_level = rsi_level
-        self.rsi_long = 50 + self.rsi_level
-        self.rsi_short = 50 - self.rsi_level
+        self.rsi_window: int = rsi_window
+        self.rsi_level: float = rsi_level
+        self.rsi_long: float = 50 + self.rsi_level
+        self.rsi_short: float = 50 - self.rsi_level
 
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
+        self.bg: BarGenerator = BarGenerator(self.on_bar)
+        self.am: ArrayManager = ArrayManager()
 
     def on_tick(self, tick: TickData) -> None:
         """
@@ -40,7 +40,7 @@ class RsiSignal(CtaSignal):
         if not self.am.inited:
             self.set_signal_pos(0)
 
-        rsi_value = self.am.rsi(self.rsi_window)
+        rsi_value: float = self.am.rsi(self.rsi_window)
 
         if rsi_value >= self.rsi_long:
             self.set_signal_pos(1)
@@ -53,17 +53,17 @@ class RsiSignal(CtaSignal):
 class CciSignal(CtaSignal):
     """"""
 
-    def __init__(self, cci_window: int, cci_level: float):
+    def __init__(self, cci_window: int, cci_level: float) -> None:
         """"""
         super().__init__()
 
-        self.cci_window = cci_window
-        self.cci_level = cci_level
-        self.cci_long = self.cci_level
-        self.cci_short = -self.cci_level
+        self.cci_window: int = cci_window
+        self.cci_level: float = cci_level
+        self.cci_long: float = self.cci_level
+        self.cci_short: float = -self.cci_level
 
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
+        self.bg: BarGenerator = BarGenerator(self.on_bar)
+        self.am: ArrayManager = ArrayManager()
 
     def on_tick(self, tick: TickData) -> None:
         """
@@ -79,7 +79,7 @@ class CciSignal(CtaSignal):
         if not self.am.inited:
             self.set_signal_pos(0)
 
-        cci_value = self.am.cci(self.cci_window)
+        cci_value: float = self.am.cci(self.cci_window)
 
         if cci_value >= self.cci_long:
             self.set_signal_pos(1)
@@ -92,15 +92,15 @@ class CciSignal(CtaSignal):
 class MaSignal(CtaSignal):
     """"""
 
-    def __init__(self, fast_window: int, slow_window: int):
+    def __init__(self, fast_window: int, slow_window: int) -> None:
         """"""
         super().__init__()
 
-        self.fast_window = fast_window
-        self.slow_window = slow_window
+        self.fast_window: int = fast_window
+        self.slow_window: int = slow_window
 
-        self.bg = BarGenerator(self.on_bar, 5, self.on_5min_bar)
-        self.am = ArrayManager()
+        self.bg: BarGenerator = BarGenerator(self.on_bar, 5, self.on_5min_bar)
+        self.am: ArrayManager = ArrayManager()
 
     def on_tick(self, tick: TickData) -> None:
         """
@@ -120,8 +120,8 @@ class MaSignal(CtaSignal):
         if not self.am.inited:
             self.set_signal_pos(0)
 
-        fast_ma = self.am.sma(self.fast_window)
-        slow_ma = self.am.sma(self.slow_window)
+        fast_ma: float = self.am.sma(self.fast_window)
+        slow_ma: float = self.am.sma(self.slow_window)
 
         if fast_ma > slow_ma:
             self.set_signal_pos(1)
@@ -206,7 +206,7 @@ class MultiSignalStrategy(TargetPosTemplate):
         self.signal_pos["cci"] = self.cci_signal.get_signal_pos()
         self.signal_pos["ma"] = self.ma_signal.get_signal_pos()
 
-        target_pos = 0
+        target_pos: int = 0
         for v in self.signal_pos.values():
             target_pos += v
 

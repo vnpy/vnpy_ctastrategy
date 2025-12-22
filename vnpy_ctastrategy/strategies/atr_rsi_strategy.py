@@ -1,3 +1,5 @@
+import numpy as np
+
 from vnpy_ctastrategy import (
     CtaTemplate,
     StopOrder,
@@ -54,8 +56,8 @@ class AtrRsiStrategy(CtaTemplate):
         """
         self.write_log("策略初始化")
 
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
+        self.bg: BarGenerator = BarGenerator(self.on_bar)
+        self.am: ArrayManager = ArrayManager()
 
         self.rsi_buy = 50 + self.rsi_entry
         self.rsi_sell = 50 - self.rsi_entry
@@ -86,12 +88,12 @@ class AtrRsiStrategy(CtaTemplate):
         """
         self.cancel_all()
 
-        am = self.am
+        am: ArrayManager = self.am
         am.update_bar(bar)
         if not am.inited:
             return
 
-        atr_array = am.atr(self.atr_length, array=True)
+        atr_array: np.ndarray = am.atr(self.atr_length, array=True)
         self.atr_value = atr_array[-1]
         self.atr_ma = atr_array[-self.atr_ma_length:].mean()
         self.rsi_value = am.rsi(self.rsi_length)
@@ -110,16 +112,14 @@ class AtrRsiStrategy(CtaTemplate):
             self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
             self.intra_trade_low = bar.low_price
 
-            long_stop = self.intra_trade_high * \
-                (1 - self.trailing_percent / 100)
+            long_stop: float = self.intra_trade_high * (1 - self.trailing_percent / 100)
             self.sell(long_stop, abs(self.pos), stop=True)
 
         elif self.pos < 0:
             self.intra_trade_low = min(self.intra_trade_low, bar.low_price)
             self.intra_trade_high = bar.high_price
 
-            short_stop = self.intra_trade_low * \
-                (1 + self.trailing_percent / 100)
+            short_stop: float = self.intra_trade_low * (1 + self.trailing_percent / 100)
             self.cover(short_stop, abs(self.pos), stop=True)
 
         self.put_event()

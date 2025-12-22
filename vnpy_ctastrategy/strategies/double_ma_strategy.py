@@ -1,3 +1,5 @@
+import numpy as np
+
 from vnpy_ctastrategy import (
     CtaTemplate,
     StopOrder,
@@ -64,21 +66,21 @@ class DoubleMaStrategy(CtaTemplate):
         """
         self.cancel_all()
 
-        am = self.am
+        am: ArrayManager = self.am
         am.update_bar(bar)
         if not am.inited:
             return
 
-        fast_ma = am.sma(self.fast_window, array=True)
+        fast_ma: np.ndarray = am.sma(self.fast_window, array=True)
         self.fast_ma0 = fast_ma[-1]
         self.fast_ma1 = fast_ma[-2]
 
-        slow_ma = am.sma(self.slow_window, array=True)
+        slow_ma: np.ndarray = am.sma(self.slow_window, array=True)
         self.slow_ma0 = slow_ma[-1]
         self.slow_ma1 = slow_ma[-2]
 
-        cross_over = self.fast_ma0 > self.slow_ma0 and self.fast_ma1 < self.slow_ma1
-        cross_below = self.fast_ma0 < self.slow_ma0 and self.fast_ma1 > self.slow_ma1
+        cross_over: bool = self.fast_ma0 > self.slow_ma0 and self.fast_ma1 < self.slow_ma1
+        cross_below: bool = self.fast_ma0 < self.slow_ma0 and self.fast_ma1 > self.slow_ma1
 
         if cross_over:
             if self.pos == 0:

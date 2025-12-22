@@ -39,8 +39,8 @@ class TurtleSignalStrategy(CtaTemplate):
         """
         self.write_log("策略初始化")
 
-        self.bg = BarGenerator(self.on_bar)
-        self.am = ArrayManager()
+        self.bg: BarGenerator = BarGenerator(self.on_bar)
+        self.am: ArrayManager = ArrayManager()
 
         self.load_bar(20)
 
@@ -93,13 +93,13 @@ class TurtleSignalStrategy(CtaTemplate):
         elif self.pos > 0:
             self.send_buy_orders(self.entry_up)
 
-            sell_price = max(self.long_stop, self.exit_down)
+            sell_price: float = max(self.long_stop, self.exit_down)
             self.sell(sell_price, abs(self.pos), True)
 
         elif self.pos < 0:
             self.send_short_orders(self.entry_down)
 
-            cover_price = min(self.short_stop, self.exit_up)
+            cover_price: float = min(self.short_stop, self.exit_up)
             self.cover(cover_price, abs(self.pos), True)
 
         self.put_event()

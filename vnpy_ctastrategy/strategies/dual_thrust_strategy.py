@@ -75,7 +75,7 @@ class DualThrustStrategy(CtaTemplate):
             return
         else:
             self.bars.pop(0)
-        last_bar = self.bars[-2]
+        last_bar: BarData = self.bars[-2]
 
         if last_bar.datetime.date() != bar.datetime.date():
             if self.day_high:
