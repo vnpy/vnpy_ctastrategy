@@ -30,7 +30,7 @@ class CtaTemplate(ABC):
 
         self.inited: bool = False
         self.trading: bool = False
-        self.pos: int = 0
+        self.pos: float = 0
 
         # Copy a new variables list here to avoid duplicate insert when multiple
         # strategy instances are created with the same strategy class.
@@ -371,8 +371,8 @@ class TargetPosTemplate(CtaTemplate):
     """"""
     tick_add = 1
 
-    last_tick: TickData = None
-    last_bar: BarData = None
+    last_tick: TickData | None = None
+    last_bar: BarData | None = None
     target_pos = 0
 
     def __init__(
@@ -447,8 +447,8 @@ class TargetPosTemplate(CtaTemplate):
         if not pos_change:
             return
 
-        long_price = 0
-        short_price = 0
+        long_price: float = 0
+        short_price: float = 0
 
         if self.last_tick:
             if pos_change > 0:
@@ -460,7 +460,7 @@ class TargetPosTemplate(CtaTemplate):
                 if self.last_tick.limit_down:
                     short_price = max(short_price, self.last_tick.limit_down)
 
-        else:
+        elif self.last_bar:
             if pos_change > 0:
                 long_price = self.last_bar.close_price + self.tick_add
             else:

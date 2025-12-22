@@ -190,7 +190,7 @@ class BacktestingEngine:
             end = min(end, self.end)  # Make sure end time stays within set range
 
             if self.mode == BacktestingMode.BAR:
-                data: list[BarData] = load_bar_data(
+                data: list[BarData] | list[TickData] = load_bar_data(
                     self.symbol,
                     self.exchange,
                     self.interval,
@@ -259,6 +259,9 @@ class BacktestingEngine:
 
         # Add trade data into daily reuslt.
         for trade in self.trades.values():
+            if not trade.datetime:
+                continue
+
             d: Date = trade.datetime.date()
             daily_result: DailyResult = self.daily_results[d]
             daily_result.add_trade(trade)
@@ -335,7 +338,7 @@ class BacktestingEngine:
         sharpe_ratio: float = 0
         ewm_sharpe: float = 0
         return_drawdown_ratio: float = 0
-        rgr: float = 0
+        rgr_ratio: float = 0
 
         # Check if balance is always positive
         positive_balance: bool = False
@@ -347,7 +350,7 @@ class BacktestingEngine:
             # When balance falls below 0, set daily return to 0
             pre_balance: Series = df["balance"].shift(1)
             pre_balance.iloc[0] = self.capital
-            x = df["balance"] / pre_balance
+            x: Series = df["balance"] / pre_balance
             x[x <= 0] = np.nan
             df["return"] = np.log(x).fillna(0)
 
@@ -356,7 +359,7 @@ class BacktestingEngine:
             df["ddpercent"] = df["drawdown"] / df["highlevel"] * 100
 
             # All balance value needs to be positive
-            positive_balance = (df["balance"] > 0).all()
+            positive_balance = bool((df["balance"] > 0).all())
             if not positive_balance:
                 self.output(_("回测中出现爆仓（资金小于等于0），无法计算策略统计指标"))
 
@@ -376,7 +379,7 @@ class BacktestingEngine:
             max_drawdown_end = df["drawdown"].idxmin()
 
             if isinstance(max_drawdown_end, Date):
-                max_drawdown_start = df["balance"][:max_drawdown_end].idxmax()      # type: ignore
+                max_drawdown_start = df["balance"][:max_drawdown_end].idxmax()
                 max_drawdown_duration = (max_drawdown_end - max_drawdown_start).days
             else:
                 max_drawdown_duration = 0
@@ -427,12 +430,12 @@ class BacktestingEngine:
                 stability_return = 0
 
             returns_series: Series = df["return"]
-            annual_downside_risk: float = ep.downside_risk(returns_series, required_return=0, period='daily')
-            return_skew: float = returns_series.skew()
-            return_kurt: float = returns_series.kurt()
-            cvar_95: float = ep.conditional_value_at_risk(returns_series, cutoff=0.05)
+            annual_downside_risk: float = float(ep.downside_risk(returns_series, required_return=0, period='daily'))
+            return_skew: float = cast(float, returns_series.skew())
+            return_kurt: float = cast(float, returns_series.kurt())
+            cvar_95 = float(ep.conditional_value_at_risk(returns_series, cutoff=0.05))
 
-            rgr = calc_rgr(
+            rgr_ratio = calc_rgr_ratio(
                 cagr_value,
                 stability_return,
                 annual_downside_risk,
@@ -478,7 +481,7 @@ class BacktestingEngine:
             self.output(f"Sharpe Ratio：\t{sharpe_ratio:,.2f}")
             self.output(f"EWM Sharpe：\t{ewm_sharpe:,.2f}")
             self.output(_("收益回撤比：\t{:,.2f}").format(return_drawdown_ratio))
-            self.output(f"RGR指标：\t{rgr:,.2f}")
+            self.output(f"RGR Ratio：\t{rgr_ratio:,.2f}")
 
         statistics: dict = {
             "start_date": start_date,
@@ -508,7 +511,7 @@ class BacktestingEngine:
             "sharpe_ratio": sharpe_ratio,
             "ewm_sharpe": ewm_sharpe,
             "return_drawdown_ratio": return_drawdown_ratio,
-            "rgr": rgr,
+            "rgr_ratio": rgr_ratio,
         }
 
         # Filter potential error infinite value
@@ -939,7 +942,7 @@ class BacktestingEngine:
         self.active_limit_orders[order.vt_orderid] = order
         self.limit_orders[order.vt_orderid] = order
 
-        return order.vt_orderid     # type: ignore
+        return order.vt_orderid
 
     def cancel_order(self, strategy: CtaTemplate, vt_orderid: str) -> None:
         """
@@ -1133,7 +1136,7 @@ def load_bar_data(
     """"""
     database: BaseDatabase = get_database()
 
-    return database.load_bar_data(symbol, exchange, interval, start, end)       # type: ignore
+    return database.load_bar_data(symbol, exchange, interval, start, end)
 
 
 @lru_cache(maxsize=999)
@@ -1146,7 +1149,7 @@ def load_tick_data(
     """"""
     database: BaseDatabase = get_database()
 
-    return database.load_tick_data(symbol, exchange, start, end)       # type: ignore
+    return database.load_tick_data(symbol, exchange, start, end)
 
 
 def evaluate(
@@ -1214,7 +1217,7 @@ def wrap_evaluate(engine: BacktestingEngine, target_name: str) -> Callable:
     return func
 
 
-def calc_rgr(
+def calc_rgr_ratio(
     cagr_value: float,
     stability_return: float,
     annual_downside_risk: float,
@@ -1250,12 +1253,12 @@ def calc_rgr(
         combined_risk = 1e-9
 
     # Final RGR calculation
-    rgr: float = (gain * stability_return * skew_factor * kurt_factor) / combined_risk
+    rgr_ratio: float = (gain * stability_return * skew_factor * kurt_factor) / combined_risk
 
-    return rgr
+    return rgr_ratio
 
 
-def get_target_value(result: list) -> float:
+def get_target_value(result: list | tuple) -> float:
     """
     Get target value for sorting optimization results.
     """

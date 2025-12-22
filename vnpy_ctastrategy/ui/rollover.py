@@ -125,9 +125,9 @@ class RolloverTool(QtWidgets.QDialog):
 
     def roll_position(self, old_symbol: str, new_symbol: str, payup: int) -> None:
         """"""
-        contract: ContractData = self.main_engine.get_contract(old_symbol)
-        converter: OffsetConverter = self.main_engine.get_converter(contract.gateway_name)
-        holding: PositionHolding = converter.get_position_holding(old_symbol)
+        contract: ContractData = self.main_engine.get_contract(old_symbol)                  # type: ignore
+        converter: OffsetConverter = self.main_engine.get_converter(contract.gateway_name)  # type: ignore
+        holding: PositionHolding = converter.get_position_holding(old_symbol)               # type: ignore
 
         # Roll long position
         if holding.long_pos:

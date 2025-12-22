@@ -31,7 +31,7 @@ class CtaManager(QtWidgets.QWidget):
 
         self.main_engine: MainEngine = main_engine
         self.event_engine: EventEngine = event_engine
-        self.cta_engine: CtaEngine = main_engine.get_engine(APP_NAME)
+        self.cta_engine: CtaEngine = main_engine.get_engine(APP_NAME)  # type: ignore
 
         self.managers: dict[str, StrategyManager] = {}
 
