@@ -24,7 +24,6 @@ dependencies = [
     "vnpy>=4.0.0",
     "pandas",
     "plotly",
-    "empyrical-reloaded",
 ]
 keywords = ["quant", "quantitative", "investment", "trading", "algotrading"]
 
