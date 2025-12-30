@@ -14,8 +14,6 @@ from pandas import DataFrame, Series
 from pandas.core.window import ExponentialMovingWindow
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import empyrical as ep
-
 from vnpy.trader.constant import (
     Direction,
     Offset,
@@ -430,10 +428,14 @@ class BacktestingEngine:
                 stability_return = 0
 
             returns_series: Series = df["return"]
-            annual_downside_risk: float = float(ep.downside_risk(returns_series, required_return=0, period='daily'))
+            downside_diff: np.ndarray = np.minimum(returns_series.values, 0.0)
+            downside_std: float = np.sqrt(np.mean(downside_diff ** 2))
+            annual_downside_risk: float = downside_std * np.sqrt(252)
             return_skew: float = cast(float, returns_series.skew())
             return_kurt: float = cast(float, returns_series.kurt())
-            cvar_95 = float(ep.conditional_value_at_risk(returns_series, cutoff=0.05))
+            sorted_returns: np.ndarray = np.sort(returns_series.values)
+            cutoff_index: int = int(np.ceil(len(sorted_returns) * 0.05))
+            cvar_95: float = np.mean(sorted_returns[:cutoff_index])
 
             rgr_ratio = calc_rgr_ratio(
                 cagr_value,
