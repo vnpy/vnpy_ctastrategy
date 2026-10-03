@@ -1,3 +1,5 @@
+"""构建时把翻译文本编译成.mo文件。"""
+
 from pathlib import Path
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface

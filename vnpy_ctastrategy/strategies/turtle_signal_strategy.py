@@ -1,3 +1,5 @@
+"""海龟信号策略。"""
+
 from vnpy_ctastrategy import (
     CtaTemplate,
     StopOrder,
@@ -12,7 +14,7 @@ from vnpy_ctastrategy import (
 
 
 class TurtleSignalStrategy(CtaTemplate):
-    """"""
+    """用唐奇安通道分批开仓，并用ATR或出场通道平仓的策略。"""
     author = "用Python的交易员"
 
     entry_window: int = 20
@@ -35,7 +37,7 @@ class TurtleSignalStrategy(CtaTemplate):
 
     def on_init(self) -> None:
         """
-        Callback when strategy is inited.
+        策略初始化完成时的回调。
         """
         self.write_log("策略初始化")
 
@@ -46,25 +48,25 @@ class TurtleSignalStrategy(CtaTemplate):
 
     def on_start(self) -> None:
         """
-        Callback when strategy is started.
+        策略启动时的回调。
         """
         self.write_log("策略启动")
 
     def on_stop(self) -> None:
         """
-        Callback when strategy is stopped.
+        策略停止时的回调。
         """
         self.write_log("策略停止")
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.bg.update_tick(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.cancel_all()
 
@@ -106,7 +108,7 @@ class TurtleSignalStrategy(CtaTemplate):
 
     def on_trade(self, trade: TradeData) -> None:
         """
-        Callback of new trade data update.
+        新成交数据更新时的回调。
         """
         if trade.direction == Direction.LONG:
             self.long_entry = trade.price
@@ -117,18 +119,18 @@ class TurtleSignalStrategy(CtaTemplate):
 
     def on_order(self, order: OrderData) -> None:
         """
-        Callback of new order data update.
+        新委托数据更新时的回调。
         """
         pass
 
     def on_stop_order(self, stop_order: StopOrder) -> None:
         """
-        Callback of stop order update.
+        停止单更新时的回调。
         """
         pass
 
     def send_buy_orders(self, price: float) -> None:
-        """"""
+        """按当前持仓单位，在价格上方分批发出最多四笔买入停止单。"""
         t: float = self.pos / self.fixed_size
 
         if t < 1:
@@ -144,7 +146,7 @@ class TurtleSignalStrategy(CtaTemplate):
             self.buy(price + self.atr_value * 1.5, self.fixed_size, True)
 
     def send_short_orders(self, price: float) -> None:
-        """"""
+        """按当前持仓单位，在价格下方分批发出最多四笔卖出停止单。"""
         t: float = self.pos / self.fixed_size
 
         if t > -1:

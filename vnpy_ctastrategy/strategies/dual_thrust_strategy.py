@@ -1,3 +1,5 @@
+"""Dual Thrust策略。"""
+
 from datetime import time
 from vnpy_ctastrategy import (
     CtaTemplate,
@@ -12,7 +14,7 @@ from vnpy_ctastrategy import (
 
 
 class DualThrustStrategy(CtaTemplate):
-    """"""
+    """按前一日振幅和开盘价计算上下轨，盘中突破后开仓的策略。"""
 
     author = "用Python的交易员"
 
@@ -34,7 +36,7 @@ class DualThrustStrategy(CtaTemplate):
 
     def on_init(self) -> None:
         """
-        Callback when strategy is inited.
+        策略初始化完成时的回调。
         """
         self.write_log("策略初始化")
 
@@ -48,25 +50,25 @@ class DualThrustStrategy(CtaTemplate):
 
     def on_start(self) -> None:
         """
-        Callback when strategy is started.
+        策略启动时的回调。
         """
         self.write_log("策略启动")
 
     def on_stop(self) -> None:
         """
-        Callback when strategy is stopped.
+        策略停止时的回调。
         """
         self.write_log("策略停止")
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.bg.update_tick(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.cancel_all()
 
@@ -132,18 +134,18 @@ class DualThrustStrategy(CtaTemplate):
 
     def on_order(self, order: OrderData) -> None:
         """
-        Callback of new order data update.
+        新委托数据更新时的回调。
         """
         pass
 
     def on_trade(self, trade: TradeData) -> None:
         """
-        Callback of new trade data update.
+        新成交数据更新时的回调。
         """
         self.put_event()
 
     def on_stop_order(self, stop_order: StopOrder) -> None:
         """
-        Callback of stop order update.
+        停止单更新时的回调。
         """
         pass

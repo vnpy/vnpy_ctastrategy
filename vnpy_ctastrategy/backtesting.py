@@ -1,3 +1,5 @@
+"""CTA策略回测。"""
+
 from collections import defaultdict
 from datetime import (
     date as Date,
@@ -44,13 +46,13 @@ from .locale import _
 
 
 class BacktestingEngine:
-    """"""
+    """CTA策略回测引擎。"""
 
     engine_type: EngineType = EngineType.BACKTESTING
     gateway_name: str = "BACKTESTING"
 
     def __init__(self) -> None:
-        """"""
+        """初始化回测参数、委托和成交容器。"""
         self.vt_symbol: str = ""
         self.symbol: str = ""
         self.exchange: Exchange
@@ -95,7 +97,7 @@ class BacktestingEngine:
 
     def clear_data(self) -> None:
         """
-        Clear all data of last backtesting.
+        清除上一次回测的全部数据。
         """
         self.stop_order_count = 0
         self.stop_orders.clear()
@@ -127,7 +129,7 @@ class BacktestingEngine:
         annual_days: int = 240,
         half_life: int = 120
     ) -> None:
-        """"""
+        """设置回测参数；未给结束时间时用当前时间，并把结束时间改到当天23:59:59。"""
         self.mode = mode
         self.vt_symbol = vt_symbol
         self.interval = Interval(interval)
@@ -152,14 +154,14 @@ class BacktestingEngine:
         self.half_life = half_life
 
     def add_strategy(self, strategy_class: type[CtaTemplate], setting: dict) -> None:
-        """"""
+        """按策略类和参数创建策略实例。"""
         self.strategy_class = strategy_class
         self.strategy = strategy_class(
             self, strategy_class.__name__, self.vt_symbol, setting
         )
 
     def load_data(self) -> None:
-        """"""
+        """按回测区间分段加载历史K线或Tick。"""
         self.output(_("开始加载历史数据"))
 
         if not self.end:
@@ -214,7 +216,7 @@ class BacktestingEngine:
         self.output(_("历史数据加载完成，数据量：{}").format(len(self.history_data)))
 
     def run_backtesting(self) -> None:
-        """"""
+        """初始化策略并回放历史数据，异常时终止。"""
         if self.mode == BacktestingMode.BAR:
             func: Callable[[Any], None] = self.new_bar
         else:
@@ -249,7 +251,7 @@ class BacktestingEngine:
         self.output(_("历史数据回放结束"))
 
     def calculate_result(self) -> DataFrame:
-        """"""
+        """把成交计入每日结果并计算逐日盯市盈亏。"""
         self.output(_("开始计算逐日盯市盈亏"))
 
         if not self.trades:
@@ -298,7 +300,7 @@ class BacktestingEngine:
         df: DataFrame | None = None,
         output: bool = True
     ) -> dict:
-        """"""
+        """根据逐日盈亏计算绩效统计指标，结果为空时返回空字典。"""
         self.output(_("开始计算策略统计指标"))
 
         # Check DataFrame input exterior
@@ -526,7 +528,7 @@ class BacktestingEngine:
         return statistics
 
     def show_chart(self, df: DataFrame | None = None) -> go.Figure:
-        """"""
+        """绘制资金、回撤、每日盈亏和盈亏分布图，数据为空时直接返回。"""
         # Check DataFrame input exterior
         if df is None:
             df = self.daily_df
@@ -574,7 +576,7 @@ class BacktestingEngine:
         output: bool = True,
         max_workers: int | None = None
     ) -> list:
-        """"""
+        """优化设置无效时返回空列表，否则运行穷举优化。"""
         if not check_optimization_setting(optimization_setting):
             return []
 
@@ -609,7 +611,7 @@ class BacktestingEngine:
         mutpb: float | None = None,
         indpb: float = 1.0
     ) -> list:
-        """"""
+        """优化设置无效时返回空列表，否则运行遗传算法优化。"""
         if not check_optimization_setting(optimization_setting):
             return []
 
@@ -637,7 +639,7 @@ class BacktestingEngine:
         return results
 
     def update_daily_close(self, price: float) -> None:
-        """"""
+        """写入当日收盘价，没有记录时新建。"""
         d: Date = self.datetime.date()
 
         daily_result: DailyResult | None = self.daily_results.get(d, None)
@@ -647,7 +649,7 @@ class BacktestingEngine:
             self.daily_results[d] = DailyResult(d, price)
 
     def new_bar(self, bar: BarData) -> None:
-        """"""
+        """用这根K线撮合委托、回调策略并更新当日收盘价。"""
         self.bar = bar
         self.datetime = bar.datetime
 
@@ -658,7 +660,7 @@ class BacktestingEngine:
         self.update_daily_close(bar.close_price)
 
     def new_tick(self, tick: TickData) -> None:
-        """"""
+        """用这笔Tick撮合委托、回调策略并更新当日收盘价。"""
         self.tick = tick
         self.datetime = tick.datetime
 
@@ -670,7 +672,7 @@ class BacktestingEngine:
 
     def cross_limit_order(self) -> None:
         """
-        Cross limit order with last bar/tick data.
+        用最新 K 线或 Tick 撮合限价单。
         """
         if self.mode == BacktestingMode.BAR:
             long_cross_price = self.bar.low_price
@@ -743,7 +745,7 @@ class BacktestingEngine:
 
     def cross_stop_order(self) -> None:
         """
-        Cross stop order with last bar/tick data.
+        用最新 K 线或 Tick 撮合停止单。
         """
         if self.mode == BacktestingMode.BAR:
             long_cross_price = self.bar.high_price
@@ -837,7 +839,7 @@ class BacktestingEngine:
         callback: Callable,
         use_database: bool
     ) -> list[BarData]:
-        """"""
+        """加载回测开始前的历史K线，并保存回调。"""
         self.callback = callback
 
         init_end = self.start - INTERVAL_DELTA_MAP[interval]
@@ -856,7 +858,7 @@ class BacktestingEngine:
         return bars
 
     def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> list[TickData]:
-        """"""
+        """加载回测开始前的历史Tick，并保存回调。"""
         self.callback = callback
 
         init_end = self.start - timedelta(seconds=1)
@@ -884,7 +886,7 @@ class BacktestingEngine:
         lock: bool,
         net: bool
     ) -> list:
-        """"""
+        """价格按最小变动取整后发送停止单或限价单，并返回委托号列表。"""
         price = round_to(price, self.pricetick)
         if stop:
             vt_orderid: str = self.send_stop_order(direction, offset, price, volume)
@@ -899,7 +901,7 @@ class BacktestingEngine:
         price: float,
         volume: float
     ) -> str:
-        """"""
+        """创建本地停止单并返回停止单号。"""
         self.stop_order_count += 1
 
         stop_order: StopOrder = StopOrder(
@@ -925,7 +927,7 @@ class BacktestingEngine:
         price: float,
         volume: float
     ) -> str:
-        """"""
+        """创建提交中的限价单并返回委托号。"""
         self.limit_order_count += 1
 
         order: OrderData = OrderData(
@@ -948,7 +950,7 @@ class BacktestingEngine:
 
     def cancel_order(self, strategy: CtaTemplate, vt_orderid: str) -> None:
         """
-        Cancel order by vt_orderid.
+        按 vt_orderid 撤销委托。
         """
         if vt_orderid.startswith(STOPORDER_PREFIX):
             self.cancel_stop_order(strategy, vt_orderid)
@@ -956,7 +958,7 @@ class BacktestingEngine:
             self.cancel_limit_order(strategy, vt_orderid)
 
     def cancel_stop_order(self, strategy: CtaTemplate, vt_orderid: str) -> None:
-        """"""
+        """撤销活动停止单并回调策略。"""
         if vt_orderid not in self.active_stop_orders:
             return
         stop_order: StopOrder = self.active_stop_orders.pop(vt_orderid)
@@ -965,7 +967,7 @@ class BacktestingEngine:
         self.strategy.on_stop_order(stop_order)
 
     def cancel_limit_order(self, strategy: CtaTemplate, vt_orderid: str) -> None:
-        """"""
+        """撤销活动限价单并回调策略。"""
         if vt_orderid not in self.active_limit_orders:
             return
         order: OrderData = self.active_limit_orders.pop(vt_orderid)
@@ -975,7 +977,7 @@ class BacktestingEngine:
 
     def cancel_all(self, strategy: CtaTemplate) -> None:
         """
-        Cancel all orders, both limit and stop.
+        撤销全部限价单和停止单。
         """
         vt_orderids: list = list(self.active_limit_orders.keys())
         for vt_orderid in vt_orderids:
@@ -987,14 +989,14 @@ class BacktestingEngine:
 
     def write_log(self, msg: str, strategy: CtaTemplate | None = None) -> None:
         """
-        Write log message.
+        写日志。
         """
         msg = f"{self.datetime}\t{msg}"
         self.logs.append(msg)
 
     def send_notification(self, msg: str, strategy: CtaTemplate | None = None) -> None:
         """
-        Push notification through all configured channels.
+        通过全部已配置通道推送通知。
         """
         pass
 
@@ -1002,64 +1004,64 @@ class BacktestingEngine:
 
     def sync_strategy_data(self, strategy: CtaTemplate) -> None:
         """
-        Sync strategy data into json file.
+        把策略数据同步到 JSON 文件。
         """
         pass
 
     def get_engine_type(self) -> EngineType:
         """
-        Return engine type.
+        返回引擎类型。
         """
         return self.engine_type
 
     def get_pricetick(self, strategy: CtaTemplate) -> float:
         """
-        Return contract pricetick data.
+        返回合约最小变动价位。
         """
         return self.pricetick
 
     def get_size(self, strategy: CtaTemplate) -> float:
         """
-        Return contract size data.
+        返回合约乘数。
         """
         return self.size
 
     def put_strategy_event(self, strategy: CtaTemplate) -> None:
         """
-        Put an event to update strategy status.
+        推送事件以更新策略状态。
         """
         pass
 
     def output(self, msg: str) -> None:
         """
-        Output message of backtesting engine.
+        输出回测引擎消息。
         """
         print(f"{datetime.now()}\t{msg}")
 
     def get_all_trades(self) -> list:
         """
-        Return all trade data of current backtesting result.
+        返回当前回测结果的全部成交数据。
         """
         return list(self.trades.values())
 
     def get_all_orders(self) -> list:
         """
-        Return all limit order data of current backtesting result.
+        返回当前回测结果的全部限价单数据。
         """
         return list(self.limit_orders.values())
 
     def get_all_daily_results(self) -> list:
         """
-        Return all daily result data.
+        返回全部每日结果数据。
         """
         return list(self.daily_results.values())
 
 
 class DailyResult:
-    """"""
+    """单日盈亏结果。"""
 
     def __init__(self, date: Date, close_price: float) -> None:
-        """"""
+        """用日期和收盘价创建当日盈亏记录。"""
         self.date: Date = date
         self.close_price: float = close_price
         self.pre_close: float = 0
@@ -1080,7 +1082,7 @@ class DailyResult:
         self.net_pnl: float = 0
 
     def add_trade(self, trade: TradeData) -> None:
-        """"""
+        """追加一笔成交。"""
         self.trades.append(trade)
 
     def calculate_pnl(
@@ -1091,7 +1093,7 @@ class DailyResult:
         rate: float,
         slippage: float
     ) -> None:
-        """"""
+        """计算当日交易盈亏和持仓盈亏；昨收为0时用1。"""
         # If no pre_close provided on the first day,
         # use value 1 to avoid zero division error
         if pre_close:
@@ -1137,7 +1139,7 @@ def load_bar_data(
     start: datetime,
     end: datetime
 ) -> list[BarData]:
-    """"""
+    """从数据库读取历史K线。"""
     database: BaseDatabase = get_database()
 
     return database.load_bar_data(symbol, exchange, interval, start, end)
@@ -1150,7 +1152,7 @@ def load_tick_data(
     start: datetime,
     end: datetime
 ) -> list[TickData]:
-    """"""
+    """从数据库读取历史Tick。"""
     database: BaseDatabase = get_database()
 
     return database.load_tick_data(symbol, exchange, start, end)
@@ -1172,7 +1174,7 @@ def evaluate(
     setting: dict
 ) -> tuple:
     """
-    Function for running in multiprocessing.pool
+    在多进程池中运行的函数。
     """
     engine: BacktestingEngine = BacktestingEngine()
 
@@ -1201,7 +1203,7 @@ def evaluate(
 
 def wrap_evaluate(engine: BacktestingEngine, target_name: str) -> Callable:
     """
-    Wrap evaluate function with given setting from backtesting engine.
+    用回测引擎给出的参数包装评估函数。
     """
     func: Callable = partial(
         evaluate,
@@ -1230,7 +1232,7 @@ def calc_rgr_ratio(
     return_kurt: float,
     c_var: float
 ) -> float:
-    """"""
+    """用对数收益、收益稳定度、偏度、峰度和下行风险计算RGR比率。"""
     # Apply log for diminishing marginal utility
     if cagr_value > 0:
         gain: float = np.log(1 + cagr_value)
@@ -1264,6 +1266,6 @@ def calc_rgr_ratio(
 
 def get_target_value(result: list | tuple) -> float:
     """
-    Get target value for sorting optimization results.
+    获取用于排序优化结果的目标值。
     """
     return cast(float, result[1])

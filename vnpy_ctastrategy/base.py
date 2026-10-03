@@ -1,5 +1,5 @@
 """
-Defines constants and objects used in CtaStrategy App.
+定义 CTA 策略应用使用的常量和对象。
 """
 
 from dataclasses import dataclass, field
@@ -14,23 +14,27 @@ STOPORDER_PREFIX = "STOP"
 
 
 class StopOrderStatus(Enum):
+    """停止单状态。"""
     WAITING = _("等待中")
     CANCELLED = _("已撤销")
     TRIGGERED = _("已触发")
 
 
 class EngineType(Enum):
+    """引擎类型，区分实盘和回测。"""
     LIVE = _("实盘")
     BACKTESTING = _("回测")
 
 
 class BacktestingMode(Enum):
+    """回测数据模式，分为K线和Tick。"""
     BAR = 1
     TICK = 2
 
 
 @dataclass
 class StopOrder:
+    """停止单数据。"""
     vt_symbol: str
     direction: Direction
     offset: Offset

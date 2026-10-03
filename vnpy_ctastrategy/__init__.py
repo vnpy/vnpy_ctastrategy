@@ -19,6 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+"""CTA策略应用包。"""
 
 
 from pathlib import Path
@@ -55,7 +56,7 @@ __version__ = "1.4.1"
 
 
 class CtaStrategyApp(BaseApp):
-    """"""
+    """CTA策略应用。"""
     from .locale import _
 
     app_name: str = APP_NAME

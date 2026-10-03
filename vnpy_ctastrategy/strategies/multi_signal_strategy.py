@@ -1,3 +1,5 @@
+"""多信号策略。"""
+
 from vnpy_ctastrategy import (
     StopOrder,
     TickData,
@@ -12,10 +14,10 @@ from vnpy_ctastrategy import (
 
 
 class RsiSignal(CtaSignal):
-    """"""
+    """按RSI给出多空信号。"""
 
     def __init__(self, rsi_window: int, rsi_level: float) -> None:
-        """Constructor"""
+        """构造函数。"""
         super().__init__()
 
         self.rsi_window: int = rsi_window
@@ -28,13 +30,13 @@ class RsiSignal(CtaSignal):
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.bg.update_tick(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.am.update_bar(bar)
         if not self.am.inited:
@@ -51,10 +53,10 @@ class RsiSignal(CtaSignal):
 
 
 class CciSignal(CtaSignal):
-    """"""
+    """按CCI给出多空信号。"""
 
     def __init__(self, cci_window: int, cci_level: float) -> None:
-        """"""
+        """保存CCI窗口和阈值，并创建K线工具。"""
         super().__init__()
 
         self.cci_window: int = cci_window
@@ -67,13 +69,13 @@ class CciSignal(CtaSignal):
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.bg.update_tick(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.am.update_bar(bar)
         if not self.am.inited:
@@ -90,10 +92,10 @@ class CciSignal(CtaSignal):
 
 
 class MaSignal(CtaSignal):
-    """"""
+    """按5分钟快慢均线给出多空信号。"""
 
     def __init__(self, fast_window: int, slow_window: int) -> None:
-        """"""
+        """保存均线窗口，并创建5分钟K线工具。"""
         super().__init__()
 
         self.fast_window: int = fast_window
@@ -104,18 +106,18 @@ class MaSignal(CtaSignal):
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.bg.update_tick(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.bg.update_bar(bar)
 
     def on_5min_bar(self, bar: BarData) -> None:
-        """"""
+        """在5分钟K线上按快慢均线设置信号持仓。"""
         self.am.update_bar(bar)
         if not self.am.inited:
             self.set_signal_pos(0)
@@ -132,7 +134,7 @@ class MaSignal(CtaSignal):
 
 
 class MultiSignalStrategy(TargetPosTemplate):
-    """"""
+    """把RSI、CCI和均线信号相加后调整目标持仓。"""
 
     author = "用Python的交易员"
 
@@ -148,7 +150,7 @@ class MultiSignalStrategy(TargetPosTemplate):
 
     def on_init(self) -> None:
         """
-        Callback when strategy is inited.
+        策略初始化完成时的回调。
         """
         self.write_log("策略初始化")
 
@@ -166,19 +168,19 @@ class MultiSignalStrategy(TargetPosTemplate):
 
     def on_start(self) -> None:
         """
-        Callback when strategy is started.
+        策略启动时的回调。
         """
         self.write_log("策略启动")
 
     def on_stop(self) -> None:
         """
-        Callback when strategy is stopped.
+        策略停止时的回调。
         """
         self.write_log("策略停止")
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         super().on_tick(tick)
 
@@ -190,7 +192,7 @@ class MultiSignalStrategy(TargetPosTemplate):
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         super().on_bar(bar)
 
@@ -201,7 +203,7 @@ class MultiSignalStrategy(TargetPosTemplate):
         self.calculate_target_pos()
 
     def calculate_target_pos(self) -> None:
-        """"""
+        """把三个信号持仓相加后设为目标持仓。"""
         self.signal_pos["rsi"] = self.rsi_signal.get_signal_pos()
         self.signal_pos["cci"] = self.cci_signal.get_signal_pos()
         self.signal_pos["ma"] = self.ma_signal.get_signal_pos()
@@ -214,18 +216,18 @@ class MultiSignalStrategy(TargetPosTemplate):
 
     def on_order(self, order: OrderData) -> None:
         """
-        Callback of new order data update.
+        新委托数据更新时的回调。
         """
         super().on_order(order)
 
     def on_trade(self, trade: TradeData) -> None:
         """
-        Callback of new trade data update.
+        新成交数据更新时的回调。
         """
         self.put_event()
 
     def on_stop_order(self, stop_order: StopOrder) -> None:
         """
-        Callback of stop order update.
+        停止单更新时的回调。
         """
         pass

@@ -1,3 +1,5 @@
+"""CTA策略模板。"""
+
 from abc import ABC, abstractmethod
 from copy import copy
 from typing import Any, cast
@@ -10,7 +12,7 @@ from .base import StopOrder, EngineType
 
 
 class CtaTemplate(ABC):
-    """"""
+    """CTA策略模板。"""
 
     author: str = ""
     parameters: list = []
@@ -23,7 +25,7 @@ class CtaTemplate(ABC):
         vt_symbol: str,
         setting: dict,
     ) -> None:
-        """"""
+        """保存引擎、策略名和合约，复制变量列表并写入初始参数。"""
         self.cta_engine: Any = cta_engine
         self.strategy_name: str = strategy_name
         self.vt_symbol: str = vt_symbol
@@ -43,7 +45,7 @@ class CtaTemplate(ABC):
 
     def update_setting(self, setting: dict) -> None:
         """
-        Update strategy parameter wtih value in setting dict.
+        用配置字典中的值更新策略参数。
         """
         for name in self.parameters:
             if name in setting:
@@ -52,7 +54,7 @@ class CtaTemplate(ABC):
     @classmethod
     def get_class_parameters(cls) -> dict:
         """
-        Get default parameters dict of strategy class.
+        获取策略类的默认参数字典。
         """
         class_parameters: dict = {}
         for name in cls.parameters:
@@ -61,7 +63,7 @@ class CtaTemplate(ABC):
 
     def get_parameters(self) -> dict:
         """
-        Get strategy parameters dict.
+        获取策略参数字典。
         """
         strategy_parameters: dict = {}
         for name in self.parameters:
@@ -70,7 +72,7 @@ class CtaTemplate(ABC):
 
     def get_variables(self) -> dict:
         """
-        Get strategy variables dict.
+        获取策略变量字典。
         """
         strategy_variables: dict = {}
         for name in self.variables:
@@ -79,7 +81,7 @@ class CtaTemplate(ABC):
 
     def get_data(self) -> dict:
         """
-        Get strategy data.
+        获取策略数据。
         """
         strategy_data: dict = {
             "strategy_name": self.strategy_name,
@@ -94,49 +96,49 @@ class CtaTemplate(ABC):
     @abstractmethod
     def on_init(self) -> None:
         """
-        Callback when strategy is inited.
+        策略初始化完成时的回调。
         """
         return
 
     def on_start(self) -> None:
         """
-        Callback when strategy is started.
+        策略启动时的回调。
         """
         return
 
     def on_stop(self) -> None:
         """
-        Callback when strategy is stopped.
+        策略停止时的回调。
         """
         return
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         return
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         return
 
     def on_trade(self, trade: TradeData) -> None:
         """
-        Callback of new trade data update.
+        新成交数据更新时的回调。
         """
         return
 
     def on_order(self, order: OrderData) -> None:
         """
-        Callback of new order data update.
+        新委托数据更新时的回调。
         """
         return
 
     def on_stop_order(self, stop_order: StopOrder) -> None:
         """
-        Callback of stop order update.
+        停止单更新时的回调。
         """
         return
 
@@ -149,7 +151,7 @@ class CtaTemplate(ABC):
         net: bool = False
     ) -> list:
         """
-        Send buy order to open a long position.
+        发送买入开多委托。
         """
         return self.send_order(
             Direction.LONG,
@@ -170,7 +172,7 @@ class CtaTemplate(ABC):
         net: bool = False
     ) -> list:
         """
-        Send sell order to close a long position.
+        发送卖出平多委托。
         """
         return self.send_order(
             Direction.SHORT,
@@ -191,7 +193,7 @@ class CtaTemplate(ABC):
         net: bool = False
     ) -> list:
         """
-        Send short order to open as short position.
+        发送卖出开空委托。
         """
         return self.send_order(
             Direction.SHORT,
@@ -212,7 +214,7 @@ class CtaTemplate(ABC):
         net: bool = False
     ) -> list:
         """
-        Send cover order to close a short position.
+        发送买入平空委托。
         """
         return self.send_order(
             Direction.LONG,
@@ -235,7 +237,7 @@ class CtaTemplate(ABC):
         net: bool = False
     ) -> list:
         """
-        Send a new order.
+        发送新委托。
         """
         if self.trading:
             vt_orderids: list = self.cta_engine.send_order(
@@ -247,39 +249,39 @@ class CtaTemplate(ABC):
 
     def cancel_order(self, vt_orderid: str) -> None:
         """
-        Cancel an existing order.
+        撤销已有委托。
         """
         if self.trading:
             self.cta_engine.cancel_order(self, vt_orderid)
 
     def cancel_all(self) -> None:
         """
-        Cancel all orders sent by strategy.
+        撤销策略发出的全部委托。
         """
         if self.trading:
             self.cta_engine.cancel_all(self)
 
     def write_log(self, msg: str) -> None:
         """
-        Write a log message.
+        写一条日志。
         """
         self.cta_engine.write_log(msg, self)
 
     def get_engine_type(self) -> EngineType:
         """
-        Return whether the cta_engine is backtesting or live trading.
+        返回 CTA 引擎处于回测还是实盘。
         """
         return cast(EngineType, self.cta_engine.get_engine_type())
 
     def get_pricetick(self) -> float:
         """
-        Return pricetick data of trading contract.
+        返回交易合约的最小变动价位。
         """
         return cast(float, self.cta_engine.get_pricetick(self))
 
     def get_size(self) -> int:
         """
-        Return size data of trading contract.
+        返回交易合约的合约乘数。
         """
         return cast(int, self.cta_engine.get_size(self))
 
@@ -291,7 +293,7 @@ class CtaTemplate(ABC):
         use_database: bool = False
     ) -> None:
         """
-        Load historical bar data for initializing strategy.
+        加载历史 K 线，用于初始化策略。
         """
         if not callback:
             callback = self.on_bar
@@ -309,7 +311,7 @@ class CtaTemplate(ABC):
 
     def load_tick(self, days: int) -> None:
         """
-        Load historical tick data for initializing strategy.
+        加载历史 Tick，用于初始化策略。
         """
         ticks: list[TickData] = self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
 
@@ -318,14 +320,14 @@ class CtaTemplate(ABC):
 
     def put_event(self) -> None:
         """
-        Put an strategy data event for ui update.
+        推送策略数据事件以更新界面。
         """
         if self.inited:
             self.cta_engine.put_strategy_event(self)
 
     def send_notification(self, msg: str) -> None:
         """
-        Push notification through all configured channels.
+        通过全部已配置通道推送通知。
         """
         if self.inited:
             self.cta_engine.send_notification(msg, self)
@@ -334,43 +336,43 @@ class CtaTemplate(ABC):
 
     def sync_data(self) -> None:
         """
-        Sync strategy variables value into disk storage.
+        把策略变量同步到磁盘。
         """
         if self.trading:
             self.cta_engine.sync_strategy_data(self)
 
 
 class CtaSignal(ABC):
-    """"""
+    """CTA信号模板。"""
 
     def __init__(self) -> None:
-        """"""
+        """把信号持仓设为0。"""
         self.signal_pos = 0
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         return
 
     @abstractmethod
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         return
 
     def set_signal_pos(self, pos: int) -> None:
-        """"""
+        """设置信号持仓。"""
         self.signal_pos = pos
 
     def get_signal_pos(self) -> Any:
-        """"""
+        """返回信号持仓。"""
         return self.signal_pos
 
 
 class TargetPosTemplate(CtaTemplate):
-    """"""
+    """按目标持仓调仓的策略模板。"""
     tick_add = 1
 
     last_tick: TickData | None = None
@@ -384,7 +386,7 @@ class TargetPosTemplate(CtaTemplate):
         vt_symbol: str,
         setting: dict
     ) -> None:
-        """"""
+        """初始化活动委托和撤销中的委托号，并把target_pos加入变量。"""
         super().__init__(cta_engine, strategy_name, vt_symbol, setting)
 
         self.active_orderids: list[str] = []
@@ -394,19 +396,19 @@ class TargetPosTemplate(CtaTemplate):
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.last_tick = tick
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.last_bar = bar
 
     def on_order(self, order: OrderData) -> None:
         """
-        Callback of new order data update.
+        新委托数据更新时的回调。
         """
         vt_orderid: str = order.vt_orderid
 
@@ -418,33 +420,33 @@ class TargetPosTemplate(CtaTemplate):
                 self.cancel_orderids.remove(vt_orderid)
 
     def check_order_finished(self) -> bool:
-        """"""
+        """没有活动委托时返回真。"""
         if self.active_orderids:
             return False
         else:
             return True
 
     def set_target_pos(self, target_pos: int) -> None:
-        """"""
+        """设置目标持仓并调仓。"""
         self.target_pos = target_pos
         self.trade()
 
     def trade(self) -> None:
-        """"""
+        """有未完成委托时先撤旧单，否则按目标持仓发新单。"""
         if not self.check_order_finished():
             self.cancel_old_order()
         else:
             self.send_new_order()
 
     def cancel_old_order(self) -> None:
-        """"""
+        """撤销尚未请求撤销的活动委托。"""
         for vt_orderid in self.active_orderids:
             if vt_orderid not in self.cancel_orderids:
                 self.cancel_order(vt_orderid)
                 self.cancel_orderids.append(vt_orderid)
 
     def send_new_order(self) -> None:
-        """"""
+        """按持仓差额发单；回测用开仓，实盘先平后开，且已有活动委托时不再发单。"""
         pos_change = self.target_pos - self.pos
         if not pos_change:
             return

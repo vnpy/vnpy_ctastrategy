@@ -1,3 +1,5 @@
+"""CTA策略移仓助手。"""
+
 from datetime import datetime
 from time import sleep
 from typing import TYPE_CHECKING
@@ -19,10 +21,10 @@ if TYPE_CHECKING:
 
 
 class RolloverTool(QtWidgets.QDialog):
-    """"""
+    """CTA策略移仓对话框。"""
 
     def __init__(self, cta_manager: "CtaManager") -> None:
-        """"""
+        """保存引擎引用并初始化界面。"""
         super().__init__()
 
         self.cta_manager: CtaManager = cta_manager
@@ -32,7 +34,7 @@ class RolloverTool(QtWidgets.QDialog):
         self.init_ui()
 
     def init_ui(self) -> None:
-        """"""
+        """创建移仓合约、目标合约和超价输入界面。"""
         self.setWindowTitle(_("移仓助手"))
 
         old_symbols: list = []
@@ -73,13 +75,13 @@ class RolloverTool(QtWidgets.QDialog):
         self.setLayout(hbox)
 
     def write_log(self, text: str) -> None:
-        """"""
+        """给日志加上时间并追加到文本框。"""
         now: datetime = datetime.now()
         text = now.strftime("%H:%M:%S\t") + text
         self.log_edit.append(text)
 
     def subscribe(self, vt_symbol: str) -> None:
-        """"""
+        """订阅合约行情；找不到合约时直接返回。"""
         contract: ContractData | None = self.main_engine.get_contract(vt_symbol)
         if not contract:
             return
@@ -88,7 +90,7 @@ class RolloverTool(QtWidgets.QDialog):
         self.main_engine.subscribe(req, contract.gateway_name)
 
     def roll_all(self) -> None:
-        """"""
+        """在策略已初始化且未运行时，先移持仓再把策略换到目标合约。"""
         old_symbol: str = self.old_symbol_combo.currentText()
 
         new_symbol: str = self.new_symbol_line.text()
@@ -124,7 +126,7 @@ class RolloverTool(QtWidgets.QDialog):
         self.setEnabled(False)
 
     def roll_position(self, old_symbol: str, new_symbol: str, payup: int) -> None:
-        """"""
+        """按多头和空头持仓，平掉旧合约并在新合约开仓。"""
         contract: ContractData = self.main_engine.get_contract(old_symbol)                  # type: ignore
         converter: OffsetConverter = self.main_engine.get_converter(contract.gateway_name)  # type: ignore
         holding: PositionHolding = converter.get_position_holding(old_symbol)               # type: ignore
@@ -170,7 +172,7 @@ class RolloverTool(QtWidgets.QDialog):
             )
 
     def roll_strategy(self, strategy: CtaTemplate, vt_symbol: str) -> None:
-        """"""
+        """移除旧策略，用原参数在新合约上重建并恢复持仓。"""
         if not strategy.inited:
             self.cta_engine._init_strategy(strategy.strategy_name)
 

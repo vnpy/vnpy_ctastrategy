@@ -1,3 +1,5 @@
+"""CTA策略实盘引擎。"""
+
 import importlib
 import traceback
 from collections import defaultdict
@@ -67,7 +69,7 @@ STOP_STATUS_MAP: dict[Status, StopOrderStatus] = {
 
 
 class CtaEngine(BaseEngine):
-    """"""
+    """CTA策略实盘引擎。"""
 
     engine_type: EngineType = EngineType.LIVE  # live trading engine
 
@@ -75,7 +77,7 @@ class CtaEngine(BaseEngine):
     data_filename: str = "cta_strategy_data.json"
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
-        """"""
+        """初始化策略容器、停止单计数和数据服务。"""
         super().__init__(main_engine, event_engine, APP_NAME)
 
         self.strategy_setting: dict = {}                                # strategy_name: dict
@@ -99,7 +101,7 @@ class CtaEngine(BaseEngine):
         self.datafeed: BaseDatafeed = get_datafeed()
 
     def init_engine(self) -> None:
-        """"""
+        """初始化数据服务、加载策略类和配置，并注册事件。"""
         self.init_datafeed()
         self.load_strategy_class()
         self.load_strategy_setting()
@@ -108,11 +110,11 @@ class CtaEngine(BaseEngine):
         self.write_log(_("CTA策略引擎初始化成功"))
 
     def close(self) -> None:
-        """"""
+        """停止全部策略。"""
         self.stop_all_strategies()
 
     def register_event(self) -> None:
-        """"""
+        """注册行情、委托、成交和日志事件。"""
         self.event_engine.register(EVENT_TICK, self.process_tick_event)
         self.event_engine.register(EVENT_ORDER, self.process_order_event)
         self.event_engine.register(EVENT_TRADE, self.process_trade_event)
@@ -122,7 +124,7 @@ class CtaEngine(BaseEngine):
 
     def init_datafeed(self) -> None:
         """
-        Init datafeed client.
+        初始化数据服务客户端。
         """
         result: bool = self.datafeed.init(self.write_log)
         if result:
@@ -132,7 +134,7 @@ class CtaEngine(BaseEngine):
         self, symbol: str, exchange: Exchange, interval: Interval, start: datetime, end: datetime
     ) -> list[BarData]:
         """
-        Query bar data from datafeed.
+        从数据服务查询 K 线数据。
         """
         req: HistoryRequest = HistoryRequest(
             symbol=symbol,
@@ -145,7 +147,7 @@ class CtaEngine(BaseEngine):
         return data
 
     def process_tick_event(self, event: Event) -> None:
-        """"""
+        """把Tick分发给已初始化的策略，并检查本地停止单。"""
         tick: TickData = event.data
 
         strategies: list = self.symbol_strategy_map[tick.vt_symbol]
@@ -159,7 +161,7 @@ class CtaEngine(BaseEngine):
                 self.call_strategy_func(strategy, strategy.on_tick, tick)
 
     def process_order_event(self, event: Event) -> None:
-        """"""
+        """更新委托活跃状态并回调on_order；服务器停止单同时回调on_stop_order。"""
         order: OrderData = event.data
 
         strategy: CtaTemplate | None = self.orderid_strategy_map.get(order.vt_orderid, None)
@@ -191,7 +193,7 @@ class CtaEngine(BaseEngine):
         self.call_strategy_func(strategy, strategy.on_order, order)
 
     def process_trade_event(self, event: Event) -> None:
-        """"""
+        """过滤重复成交，更新策略持仓后回调on_trade，并同步数据和界面。"""
         trade: TradeData = event.data
 
         # Filter duplicate trade push
@@ -218,7 +220,7 @@ class CtaEngine(BaseEngine):
         self.put_strategy_event(strategy)
 
     def check_stop_order(self, tick: TickData) -> None:
-        """"""
+        """用最新价触发本地停止单，触发后发送限价单。"""
         for stop_order in list(self.stop_orders.values()):
             if stop_order.vt_symbol != tick.vt_symbol:
                 continue
@@ -293,7 +295,7 @@ class CtaEngine(BaseEngine):
         net: bool
     ) -> list:
         """
-        Send a new order to server.
+        向服务器发送新委托。
         """
         # Create request and send order.
         original_req: OrderRequest = OrderRequest(
@@ -347,7 +349,7 @@ class CtaEngine(BaseEngine):
         net: bool
     ) -> list:
         """
-        Send a limit order to server.
+        向服务器发送限价单。
         """
         return self.send_server_order(
             strategy,
@@ -373,10 +375,9 @@ class CtaEngine(BaseEngine):
         net: bool
     ) -> list:
         """
-        Send a stop order to server.
+        向服务器发送停止单。
 
-        Should only be used if stop order supported
-        on the trading server.
+        仅当交易服务器支持停止单时使用。
         """
         return self.send_server_order(
             strategy,
@@ -401,7 +402,7 @@ class CtaEngine(BaseEngine):
         net: bool
     ) -> list:
         """
-        Create a new local stop order.
+        创建本地停止单。
         """
         self.stop_order_count += 1
         stop_orderid: str = f"{STOPORDER_PREFIX}.{self.stop_order_count}"
@@ -431,7 +432,7 @@ class CtaEngine(BaseEngine):
 
     def cancel_server_order(self, strategy: CtaTemplate, vt_orderid: str) -> None:
         """
-        Cancel existing order by vt_orderid.
+        按 vt_orderid 撤销已有委托。
         """
         order: OrderData | None = self.main_engine.get_order(vt_orderid)
         if not order:
@@ -443,7 +444,7 @@ class CtaEngine(BaseEngine):
 
     def cancel_local_stop_order(self, strategy: CtaTemplate, stop_orderid: str) -> None:
         """
-        Cancel a local stop order.
+        撤销本地停止单。
         """
         stop_order: StopOrder | None = self.stop_orders.get(stop_orderid, None)
         if not stop_order:
@@ -474,8 +475,7 @@ class CtaEngine(BaseEngine):
         lock: bool,
         net: bool
     ) -> list:
-        """
-        """
+        """按合约最小变动取整后发送委托；停止单在柜台支持时走服务器，否则在本地生成。"""
         contract: ContractData | None = self.main_engine.get_contract(strategy.vt_symbol)
         if not contract:
             self.write_log(_("委托失败，找不到合约：{}").format(strategy.vt_symbol), strategy)
@@ -500,8 +500,7 @@ class CtaEngine(BaseEngine):
             )
 
     def cancel_order(self, strategy: CtaTemplate, vt_orderid: str) -> None:
-        """
-        """
+        """停止单号走本地撤单，其余走服务器撤单。"""
         if vt_orderid.startswith(STOPORDER_PREFIX):
             self.cancel_local_stop_order(strategy, vt_orderid)
         else:
@@ -509,7 +508,7 @@ class CtaEngine(BaseEngine):
 
     def cancel_all(self, strategy: CtaTemplate) -> None:
         """
-        Cancel all active orders of a strategy.
+        撤销策略的全部活动委托。
         """
         vt_orderids: set = self.strategy_orderid_map[strategy.strategy_name]
         if not vt_orderids:
@@ -519,12 +518,12 @@ class CtaEngine(BaseEngine):
             self.cancel_order(strategy, vt_orderid)
 
     def get_engine_type(self) -> EngineType:
-        """"""
+        """返回引擎类型。"""
         return self.engine_type
 
     def get_pricetick(self, strategy: CtaTemplate) -> float | None:
         """
-        Return contract pricetick data.
+        返回合约最小变动价位。
         """
         contract: ContractData | None = self.main_engine.get_contract(strategy.vt_symbol)
 
@@ -535,7 +534,7 @@ class CtaEngine(BaseEngine):
 
     def get_size(self, strategy: CtaTemplate) -> int | None:
         """
-        Return contract size data.
+        返回合约乘数。
         """
         contract: ContractData | None = self.main_engine.get_contract(strategy.vt_symbol)
 
@@ -552,7 +551,7 @@ class CtaEngine(BaseEngine):
         callback: Callable[[BarData], None],
         use_database: bool
     ) -> list[BarData]:
-        """"""
+        """加载指定天数的历史K线；use_database为真时只查数据库，否则先查接口或数据服务，没有数据再查数据库。"""
         symbol, exchange = extract_vt_symbol(vt_symbol)
         end: datetime = datetime.now(DB_TZ)
         start: datetime = end - timedelta(days)
@@ -594,7 +593,7 @@ class CtaEngine(BaseEngine):
         days: int,
         callback: Callable[[TickData], None]
     ) -> list[TickData]:
-        """"""
+        """从数据库加载指定天数的历史Tick。"""
         symbol, exchange = extract_vt_symbol(vt_symbol)
         end: datetime = datetime.now(DB_TZ)
         start: datetime = end - timedelta(days)
@@ -612,7 +611,7 @@ class CtaEngine(BaseEngine):
         self, strategy: CtaTemplate, func: Callable, params: Any = None
     ) -> None:
         """
-        Call function of a strategy and catch any exception raised.
+        调用策略函数并捕获抛出的异常。
         """
         try:
             if params:
@@ -630,7 +629,7 @@ class CtaEngine(BaseEngine):
         self, class_name: str, strategy_name: str, vt_symbol: str, setting: dict
     ) -> None:
         """
-        Add a new strategy.
+        添加一个新策略。
         """
         if strategy_name in self.strategies:
             self.write_log(_("创建策略失败，存在重名{}").format(strategy_name))
@@ -664,13 +663,13 @@ class CtaEngine(BaseEngine):
 
     def init_strategy(self, strategy_name: str) -> Future:
         """
-        Init a strategy.
+        初始化策略。
         """
         return self.init_executor.submit(self._init_strategy, strategy_name)
 
     def _init_strategy(self, strategy_name: str) -> None:
         """
-        Init strategies in queue.
+        初始化队列中的策略。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
 
@@ -707,7 +706,7 @@ class CtaEngine(BaseEngine):
 
     def start_strategy(self, strategy_name: str) -> None:
         """
-        Start a strategy.
+        启动策略。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
         if not strategy.inited:
@@ -725,7 +724,7 @@ class CtaEngine(BaseEngine):
 
     def stop_strategy(self, strategy_name: str) -> None:
         """
-        Stop a strategy.
+        停止策略。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
         if not strategy.trading:
@@ -748,7 +747,7 @@ class CtaEngine(BaseEngine):
 
     def edit_strategy(self, strategy_name: str, setting: dict) -> None:
         """
-        Edit parameters of a strategy.
+        修改策略参数。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
         strategy.update_setting(setting)
@@ -758,7 +757,7 @@ class CtaEngine(BaseEngine):
 
     def remove_strategy(self, strategy_name: str) -> bool:
         """
-        Remove a strategy.
+        移除策略。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
         if strategy.trading:
@@ -789,7 +788,7 @@ class CtaEngine(BaseEngine):
 
     def load_strategy_class(self) -> None:
         """
-        Load strategy class from source code.
+        从源代码加载策略类。
         """
         path1: Path = Path(__file__).parent.joinpath("strategies")
         self.load_strategy_class_from_folder(path1, "vnpy_ctastrategy.strategies")
@@ -799,7 +798,7 @@ class CtaEngine(BaseEngine):
 
     def load_strategy_class_from_folder(self, path: Path, module_name: str = "") -> None:
         """
-        Load strategy class from certain folder.
+        从指定目录加载策略类。
         """
         for suffix in ["py", "pyd", "so"]:
             pathname: str = str(path.joinpath(f"*.{suffix}"))
@@ -810,7 +809,7 @@ class CtaEngine(BaseEngine):
 
     def load_strategy_class_from_module(self, module_name: str) -> None:
         """
-        Load strategy class from module file.
+        从模块文件加载策略类。
         """
         try:
             module: ModuleType = importlib.import_module(module_name)
@@ -832,13 +831,13 @@ class CtaEngine(BaseEngine):
 
     def load_strategy_data(self) -> None:
         """
-        Load strategy data from json file.
+        从 JSON 文件加载策略数据。
         """
         self.strategy_data = load_json(self.data_filename)
 
     def sync_strategy_data(self, strategy: CtaTemplate) -> None:
         """
-        Sync strategy data into json file.
+        把策略数据同步到 JSON 文件。
         """
         data: dict = strategy.get_variables()
         data.pop("inited")      # Strategy status (inited, trading) should not be synced.
@@ -849,13 +848,13 @@ class CtaEngine(BaseEngine):
 
     def get_all_strategy_class_names(self) -> list:
         """
-        Return names of strategy classes loaded.
+        返回已加载策略类的名称。
         """
         return list(self.classes.keys())
 
     def get_strategy_class_parameters(self, class_name: str) -> dict:
         """
-        Get default parameters of a strategy class.
+        获取策略类的默认参数。
         """
         strategy_class: type[CtaTemplate] = self.classes[class_name]
 
@@ -867,34 +866,31 @@ class CtaEngine(BaseEngine):
 
     def get_strategy_parameters(self, strategy_name: str) -> dict:
         """
-        Get parameters of a strategy.
+        获取策略参数。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
         return strategy.get_parameters()
 
     def init_all_strategies(self) -> dict[str, Future]:
-        """
-        """
+        """提交全部策略的初始化任务。"""
         futures: dict[str, Future] = {}
         for strategy_name in self.strategies.keys():
             futures[strategy_name] = self.init_strategy(strategy_name)
         return futures
 
     def start_all_strategies(self) -> None:
-        """
-        """
+        """启动全部策略。"""
         for strategy_name in self.strategies.keys():
             self.start_strategy(strategy_name)
 
     def stop_all_strategies(self) -> None:
-        """
-        """
+        """停止全部策略。"""
         for strategy_name in self.strategies.keys():
             self.stop_strategy(strategy_name)
 
     def load_strategy_setting(self) -> None:
         """
-        Load setting file.
+        加载配置文件。
         """
         self.strategy_setting = load_json(self.setting_filename)
 
@@ -908,7 +904,7 @@ class CtaEngine(BaseEngine):
 
     def update_strategy_setting(self, strategy_name: str, setting: dict) -> None:
         """
-        Update setting file.
+        更新配置文件。
         """
         strategy: CtaTemplate = self.strategies[strategy_name]
 
@@ -921,7 +917,7 @@ class CtaEngine(BaseEngine):
 
     def remove_strategy_setting(self, strategy_name: str) -> None:
         """
-        Update setting file.
+        从配置文件中移除策略。
         """
         if strategy_name not in self.strategy_setting:
             return
@@ -934,14 +930,14 @@ class CtaEngine(BaseEngine):
 
     def put_stop_order_event(self, stop_order: StopOrder) -> None:
         """
-        Put an event to update stop order status.
+        推送事件以更新停止单状态。
         """
         event: Event = Event(EVENT_CTA_STOPORDER, stop_order)
         self.event_engine.put(event)
 
     def put_strategy_event(self, strategy: CtaTemplate) -> None:
         """
-        Put an event to update strategy status.
+        推送事件以更新策略状态。
         """
         data: dict = strategy.get_data()
         event: Event = Event(EVENT_CTA_STRATEGY, data)
@@ -949,7 +945,7 @@ class CtaEngine(BaseEngine):
 
     def write_log(self, msg: str, strategy: CtaTemplate | None = None) -> None:
         """
-        Create cta engine log event.
+        创建 CTA 引擎日志事件。
         """
         if strategy:
             msg = f"[{strategy.strategy_name}]  {msg}"
@@ -960,7 +956,7 @@ class CtaEngine(BaseEngine):
 
     def send_notification(self, msg: str, strategy: CtaTemplate | None = None) -> None:
         """
-        Push notification through all configured channels.
+        通过全部已配置通道推送通知。
         """
         if strategy:
             subject: str = f"{strategy.strategy_name}"

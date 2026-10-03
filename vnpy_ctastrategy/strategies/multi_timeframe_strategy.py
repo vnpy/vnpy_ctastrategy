@@ -1,3 +1,5 @@
+"""多周期策略。"""
+
 from vnpy_ctastrategy import (
     CtaTemplate,
     StopOrder,
@@ -11,7 +13,7 @@ from vnpy_ctastrategy import (
 
 
 class MultiTimeframeStrategy(CtaTemplate):
-    """"""
+    """用15分钟均线方向过滤，并在5分钟RSI上开平仓的策略。"""
     author = "用Python的交易员"
 
     rsi_signal: int = 20
@@ -36,7 +38,7 @@ class MultiTimeframeStrategy(CtaTemplate):
 
     def on_init(self) -> None:
         """
-        Callback when strategy is inited.
+        策略初始化完成时的回调。
         """
         self.write_log("策略初始化")
 
@@ -53,31 +55,31 @@ class MultiTimeframeStrategy(CtaTemplate):
 
     def on_start(self) -> None:
         """
-        Callback when strategy is started.
+        策略启动时的回调。
         """
         self.write_log("策略启动")
 
     def on_stop(self) -> None:
         """
-        Callback when strategy is stopped.
+        策略停止时的回调。
         """
         self.write_log("策略停止")
 
     def on_tick(self, tick: TickData) -> None:
         """
-        Callback of new tick data update.
+        新 Tick 数据更新时的回调。
         """
         self.bg5.update_tick(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """
-        Callback of new bar data update.
+        新 K 线数据更新时的回调。
         """
         self.bg5.update_bar(bar)
         self.bg15.update_bar(bar)
 
     def on_5min_bar(self, bar: BarData) -> None:
-        """"""
+        """在5分钟K线上按均线方向和RSI开平仓。"""
         self.cancel_all()
 
         self.am5.update_bar(bar)
@@ -106,7 +108,7 @@ class MultiTimeframeStrategy(CtaTemplate):
         self.put_event()
 
     def on_15min_bar(self, bar: BarData) -> None:
-        """"""
+        """用15分钟快慢均线更新趋势方向。"""
         self.am15.update_bar(bar)
         if not self.am15.inited:
             return
@@ -121,18 +123,18 @@ class MultiTimeframeStrategy(CtaTemplate):
 
     def on_order(self, order: OrderData) -> None:
         """
-        Callback of new order data update.
+        新委托数据更新时的回调。
         """
         pass
 
     def on_trade(self, trade: TradeData) -> None:
         """
-        Callback of new trade data update.
+        新成交数据更新时的回调。
         """
         self.put_event()
 
     def on_stop_order(self, stop_order: StopOrder) -> None:
         """
-        Callback of stop order update.
+        停止单更新时的回调。
         """
         pass

@@ -1,3 +1,5 @@
+"""加载CTA策略的翻译文本。"""
+
 import gettext
 from pathlib import Path
 

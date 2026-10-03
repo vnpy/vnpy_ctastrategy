@@ -1,3 +1,5 @@
+"""CTA策略界面。"""
+
 from vnpy.event import Event, EventEngine
 from vnpy.trader.engine import MainEngine
 from vnpy.trader.ui import QtCore, QtGui, QtWidgets
@@ -20,13 +22,13 @@ from .rollover import RolloverTool
 
 
 class CtaManager(QtWidgets.QWidget):
-    """"""
+    """CTA策略管理界面。"""
 
     signal_log: QtCore.Signal = QtCore.Signal(Event)
     signal_strategy: QtCore.Signal = QtCore.Signal(Event)
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
-        """"""
+        """绑定引擎，初始化界面并启动CTA引擎。"""
         super().__init__()
 
         self.main_engine: MainEngine = main_engine
@@ -41,7 +43,7 @@ class CtaManager(QtWidgets.QWidget):
         self.update_class_combo()
 
     def init_ui(self) -> None:
-        """"""
+        """创建策略列表、日志、停止单和操作按钮。"""
         self.setWindowTitle(_("CTA策略"))
 
         # Create widgets
@@ -112,13 +114,13 @@ class CtaManager(QtWidgets.QWidget):
         self.setLayout(vbox)
 
     def update_class_combo(self) -> None:
-        """"""
+        """把已加载策略类名填入下拉框。"""
         names = self.cta_engine.get_all_strategy_class_names()
         names.sort()
         self.class_combo.addItems(names)
 
     def update_strategy_combo(self) -> None:
-        """"""
+        """用当前策略名刷新查找下拉框。"""
         names = list(self.managers.keys())
         names.sort()
 
@@ -126,7 +128,7 @@ class CtaManager(QtWidgets.QWidget):
         self.strategy_combo.addItems(names)
 
     def register_event(self) -> None:
-        """"""
+        """监听策略事件并更新界面。"""
         self.signal_strategy.connect(self.process_strategy_event)
 
         self.event_engine.register(
@@ -151,14 +153,14 @@ class CtaManager(QtWidgets.QWidget):
             self.update_strategy_combo()
 
     def remove_strategy(self, strategy_name: str) -> None:
-        """"""
+        """从界面移除策略控件并刷新查找列表。"""
         manager: StrategyManager = self.managers.pop(strategy_name)
         manager.deleteLater()
 
         self.update_strategy_combo()
 
     def add_strategy(self) -> None:
-        """"""
+        """弹出参数对话框，确认后添加策略。"""
         class_name: str = str(self.class_combo.currentText())
         if not class_name:
             return
@@ -177,22 +179,22 @@ class CtaManager(QtWidgets.QWidget):
             )
 
     def find_strategy(self) -> None:
-        """"""
+        """把选中的策略滚到可见区域。"""
         strategy_name = self.strategy_combo.currentText()
         if strategy_name:
             manager = self.managers[strategy_name]
             self.scroll_area.ensureWidgetVisible(manager)
 
     def clear_log(self) -> None:
-        """"""
+        """清空日志表。"""
         self.log_monitor.setRowCount(0)
 
     def show(self) -> None:
-        """"""
+        """最大化显示窗口。"""
         self.showMaximized()
 
     def roll(self) -> None:
-        """"""
+        """打开移仓助手对话框。"""
         dialog: RolloverTool = RolloverTool(self)
         dialog.exec_()
 
@@ -205,7 +207,7 @@ class StrategyManager(QtWidgets.QFrame):
     def __init__(
         self, cta_manager: CtaManager, cta_engine: CtaEngine, data: dict
     ) -> None:
-        """"""
+        """保存策略数据并初始化界面。"""
         super().__init__()
 
         self.cta_manager: CtaManager = cta_manager
@@ -217,7 +219,7 @@ class StrategyManager(QtWidgets.QFrame):
         self.init_ui()
 
     def init_ui(self) -> None:
-        """"""
+        """创建策略操作按钮和参数、变量表。"""
         self.setFixedHeight(300)
         self.setFrameShape(self.Shape.Box)
         self.setLineWidth(1)
@@ -268,7 +270,7 @@ class StrategyManager(QtWidgets.QFrame):
         self.setLayout(vbox)
 
     def update_data(self, data: dict) -> None:
-        """"""
+        """刷新参数和变量，并按初始化与运行状态切换按钮。"""
         self._data = data
 
         self.parameters_monitor.update_data(data["parameters"])
@@ -295,19 +297,19 @@ class StrategyManager(QtWidgets.QFrame):
             self.remove_button.setEnabled(True)
 
     def init_strategy(self) -> None:
-        """"""
+        """初始化该策略。"""
         self.cta_engine.init_strategy(self.strategy_name)
 
     def start_strategy(self) -> None:
-        """"""
+        """启动该策略。"""
         self.cta_engine.start_strategy(self.strategy_name)
 
     def stop_strategy(self) -> None:
-        """"""
+        """停止该策略。"""
         self.cta_engine.stop_strategy(self.strategy_name)
 
     def edit_strategy(self) -> None:
-        """"""
+        """弹出参数对话框，确认后修改策略参数。"""
         strategy_name: str = self._data["strategy_name"]
 
         parameters: dict = self.cta_engine.get_strategy_parameters(strategy_name)
@@ -319,7 +321,7 @@ class StrategyManager(QtWidgets.QFrame):
             self.cta_engine.edit_strategy(strategy_name, setting)
 
     def remove_strategy(self) -> None:
-        """"""
+        """从引擎移除策略，成功后再从界面移除。"""
         result: bool = self.cta_engine.remove_strategy(self.strategy_name)
 
         # Only remove strategy gui manager if it has been removed from engine
@@ -333,7 +335,7 @@ class DataMonitor(QtWidgets.QTableWidget):
     """
 
     def __init__(self, data: dict) -> None:
-        """"""
+        """保存数据并初始化表格。"""
         super().__init__()
 
         self._data: dict = data
@@ -342,7 +344,7 @@ class DataMonitor(QtWidgets.QTableWidget):
         self.init_ui()
 
     def init_ui(self) -> None:
-        """"""
+        """按字段创建一行只读单元格。"""
         labels: list = list(self._data.keys())
         self.setColumnCount(len(labels))
         self.setHorizontalHeaderLabels(labels)
@@ -364,7 +366,7 @@ class DataMonitor(QtWidgets.QTableWidget):
             self.cells[name] = cell
 
     def update_data(self, data: dict) -> None:
-        """"""
+        """按字段名更新单元格文本。"""
         for name, value in data.items():
             cell: QtWidgets.QTableWidgetItem = self.cells[name]
             cell.setText(str(value))
@@ -443,7 +445,7 @@ class SettingEditor(QtWidgets.QDialog):
     def __init__(
         self, parameters: dict, strategy_name: str = "", class_name: str = ""
     ) -> None:
-        """"""
+        """保存参数并初始化界面。"""
         super().__init__()
 
         self.parameters: dict = parameters
@@ -455,7 +457,7 @@ class SettingEditor(QtWidgets.QDialog):
         self.init_ui()
 
     def init_ui(self) -> None:
-        """"""
+        """按参数类型创建输入框；添加策略时附带策略名和本地代码。"""
         form: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
 
         # Add vt_symbol and name edit if add new strategy
@@ -500,7 +502,7 @@ class SettingEditor(QtWidgets.QDialog):
         self.setLayout(vbox)
 
     def get_setting(self) -> dict:
-        """"""
+        """从输入框读取参数；布尔值只把文本True视为真。"""
         setting: dict = {}
 
         if self.class_name:
