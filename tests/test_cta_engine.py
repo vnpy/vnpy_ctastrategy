@@ -1,17 +1,21 @@
 from collections.abc import Iterator
+from datetime import datetime
+from typing import cast
 
 import pytest
 
 from vnpy.event import Event
 from vnpy.trader.constant import Direction, Exchange, Offset, OrderType, Product
+from vnpy.trader.event import EVENT_TICK
 from vnpy.trader.object import (
     CancelRequest,
     ContractData,
     OrderData,
     OrderRequest,
     SubscribeRequest,
+    TickData,
 )
-from vnpy_ctastrategy.base import APP_NAME
+from vnpy_ctastrategy.base import APP_NAME, STOPORDER_PREFIX, StopOrder, StopOrderStatus
 from vnpy_ctastrategy.engine import CtaEngine
 from vnpy_ctastrategy.template import CtaTemplate
 
@@ -235,3 +239,94 @@ class TestCtaEngineOrders:
         assert cancel.orderid == "1"
         assert cancel.symbol == rig.contract.symbol
         assert cancel.exchange == rig.contract.exchange
+
+    def test_local_stop_order_when_stop_not_supported(self, rig: EngineRig) -> None:
+        # 柜台不支持停止单时，buy(stop=True) 只在引擎里记 STOP 前缀单，不发给网关。
+        strategy: MinimalStrategy = rig.strategy
+        engine: CtaEngine = rig.engine
+        rig.contract.stop_supported = False
+        engine._init_strategy("minimal")
+        engine.start_strategy("minimal")
+
+        vt_orderids: list[str] = strategy.buy(3600, 1, stop=True)
+        assert vt_orderids == [f"{STOPORDER_PREFIX}.1"]
+        assert rig.gateway.order_requests == []
+        stop_order: StopOrder = engine.stop_orders[vt_orderids[0]]
+        assert stop_order.status == StopOrderStatus.WAITING
+        assert stop_order.direction == Direction.LONG
+        assert stop_order.offset == Offset.OPEN
+        assert stop_order.price == 3600
+        assert stop_order.volume == 1
+
+    def test_local_stop_order_triggers_on_last_price(self, rig: EngineRig) -> None:
+        # 实盘触发看 last_price。high 已越过但 last_price 未到时不触发。
+        strategy: MinimalStrategy = rig.strategy
+        engine: CtaEngine = rig.engine
+        rig.contract.stop_supported = False
+        engine._init_strategy("minimal")
+        engine.start_strategy("minimal")
+
+        vt_orderids: list[str] = strategy.buy(3600, 1, stop=True)
+        stop_order: StopOrder = engine.stop_orders[vt_orderids[0]]
+        quiet: TickData = TickData(
+            symbol=rig.contract.symbol,
+            exchange=rig.contract.exchange,
+            datetime=datetime(2024, 1, 2, 9, 0),
+            last_price=3599,
+            high_price=4000,
+            low_price=3000,
+            gateway_name="FAKE",
+        )
+        engine.process_tick_event(Event(EVENT_TICK, quiet))
+        assert rig.gateway.order_requests == []
+        assert stop_order.status == StopOrderStatus.WAITING
+        assert vt_orderids[0] in engine.stop_orders
+
+        # high、low 都低于触发价，只有 last_price 到达才触发。
+        hit: TickData = TickData(
+            symbol=rig.contract.symbol,
+            exchange=rig.contract.exchange,
+            datetime=datetime(2024, 1, 2, 9, 1),
+            last_price=3600,
+            high_price=3500,
+            low_price=3400,
+            limit_up=3800,
+            ask_price_5=3700,
+            gateway_name="FAKE",
+        )
+        engine.process_tick_event(Event(EVENT_TICK, hit))
+        assert len(rig.gateway.order_requests) == 1
+        req: OrderRequest = rig.gateway.order_requests[0]
+        assert req.type == OrderType.LIMIT
+        assert req.direction == Direction.LONG
+        assert req.offset == Offset.OPEN
+        assert req.price == 3800
+        assert req.volume == 1
+        assert req.symbol == rig.contract.symbol
+        assert stop_order.status == StopOrderStatus.TRIGGERED
+        assert stop_order.vt_orderids == ["FAKE.1"]
+        assert vt_orderids[0] not in engine.stop_orders
+
+    def test_send_order_returns_empty_without_contract(self, rig: EngineRig) -> None:
+        # 合约查不到时 send_order 直接返回空列表，网关收不到委托。
+        strategy: MinimalStrategy = rig.strategy
+        engine: CtaEngine = rig.engine
+        engine._init_strategy("minimal")
+        engine.start_strategy("minimal")
+
+        main_engine: FakeMainEngine = cast(FakeMainEngine, engine.main_engine)
+        main_engine.contracts.clear()
+        assert main_engine.get_contract(strategy.vt_symbol) is None
+
+        vt_orderids: list[str] = engine.send_order(
+            strategy,
+            Direction.LONG,
+            Offset.OPEN,
+            3500,
+            1,
+            False,
+            False,
+            False,
+        )
+        assert vt_orderids == []
+        assert rig.gateway.order_requests == []
