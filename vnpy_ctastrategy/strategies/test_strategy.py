@@ -15,15 +15,15 @@ from vnpy_ctastrategy import (
 
 class TestStrategy(CtaTemplate):
     """依次测试市价单、限价单、全部撤单和停止单的策略。"""
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     test_trigger: int = 10
 
     tick_count: int = 0
     test_all_done: bool = False
 
-    parameters = ["test_trigger"]
-    variables = ["tick_count", "test_all_done"]
+    parameters: list[str] = ["test_trigger"]
+    variables: list[str] = ["tick_count", "test_all_done"]
 
     def on_init(self) -> None:
         """

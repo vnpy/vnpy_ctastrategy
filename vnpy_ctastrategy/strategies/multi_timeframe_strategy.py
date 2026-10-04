@@ -14,7 +14,7 @@ from vnpy_ctastrategy import (
 
 class MultiTimeframeStrategy(CtaTemplate):
     """用15分钟均线方向过滤，并在5分钟RSI上开平仓的策略。"""
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     rsi_signal: int = 20
     rsi_window: int = 14
@@ -29,11 +29,11 @@ class MultiTimeframeStrategy(CtaTemplate):
     slow_ma: float = 0
     ma_trend: float = 0
 
-    parameters = ["rsi_signal", "rsi_window",
+    parameters: list[str] = ["rsi_signal", "rsi_window",
                   "fast_window", "slow_window",
                   "fixed_size"]
 
-    variables = ["rsi_value", "rsi_long", "rsi_short",
+    variables: list[str] = ["rsi_value", "rsi_long", "rsi_short",
                  "fast_ma", "slow_ma", "ma_trend"]
 
     def on_init(self) -> None:

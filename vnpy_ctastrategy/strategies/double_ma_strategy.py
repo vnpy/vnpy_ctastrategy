@@ -17,7 +17,7 @@ from vnpy_ctastrategy import (
 class DoubleMaStrategy(CtaTemplate):
     """用快慢均线金叉死叉开平仓的策略。"""
 
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     fast_window: int = 10
     slow_window: int = 20
@@ -27,8 +27,8 @@ class DoubleMaStrategy(CtaTemplate):
     slow_ma0: float = 0.0
     slow_ma1: float = 0.0
 
-    parameters = ["fast_window", "slow_window"]
-    variables = ["fast_ma0", "fast_ma1", "slow_ma0", "slow_ma1"]
+    parameters: list[str] = ["fast_window", "slow_window"]
+    variables: list[str] = ["fast_ma0", "fast_ma1", "slow_ma0", "slow_ma1"]
 
     def on_init(self) -> None:
         """

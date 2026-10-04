@@ -15,7 +15,7 @@ from vnpy_ctastrategy import (
 
 class TurtleSignalStrategy(CtaTemplate):
     """用唐奇安通道分批开仓，并用ATR或出场通道平仓的策略。"""
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     entry_window: int = 20
     exit_window: int = 10
@@ -32,8 +32,8 @@ class TurtleSignalStrategy(CtaTemplate):
     long_stop: float = 0
     short_stop: float = 0
 
-    parameters = ["entry_window", "exit_window", "atr_window", "fixed_size"]
-    variables = ["entry_up", "entry_down", "exit_up", "exit_down", "atr_value"]
+    parameters: list[str] = ["entry_window", "exit_window", "atr_window", "fixed_size"]
+    variables: list[str] = ["entry_up", "entry_down", "exit_up", "exit_down", "atr_value"]
 
     def on_init(self) -> None:
         """

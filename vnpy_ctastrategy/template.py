@@ -47,6 +47,7 @@ class CtaTemplate(ABC):
         """
         用配置字典中的值更新策略参数。
         """
+        name: str
         for name in self.parameters:
             if name in setting:
                 setattr(self, name, setting[name])
@@ -57,6 +58,7 @@ class CtaTemplate(ABC):
         获取策略类的默认参数字典。
         """
         class_parameters: dict = {}
+        name: str
         for name in cls.parameters:
             class_parameters[name] = getattr(cls, name)
         return class_parameters
@@ -66,6 +68,7 @@ class CtaTemplate(ABC):
         获取策略参数字典。
         """
         strategy_parameters: dict = {}
+        name: str
         for name in self.parameters:
             strategy_parameters[name] = getattr(self, name)
         return strategy_parameters
@@ -75,6 +78,7 @@ class CtaTemplate(ABC):
         获取策略变量字典。
         """
         strategy_variables: dict = {}
+        name: str
         for name in self.variables:
             strategy_variables[name] = getattr(self, name)
         return strategy_variables
@@ -306,6 +310,7 @@ class CtaTemplate(ABC):
             use_database
         )
 
+        bar: BarData
         for bar in bars:
             callback(bar)
 
@@ -315,6 +320,7 @@ class CtaTemplate(ABC):
         """
         ticks: list[TickData] = self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
 
+        tick: TickData
         for tick in ticks:
             self.on_tick(tick)
 
@@ -332,7 +338,7 @@ class CtaTemplate(ABC):
         if self.inited:
             self.cta_engine.send_notification(msg, self)
 
-    send_email = send_notification
+    send_email: Callable[["CtaTemplate", str], None] = send_notification
 
     def sync_data(self) -> None:
         """
@@ -347,7 +353,7 @@ class CtaSignal(ABC):
 
     def __init__(self) -> None:
         """把信号持仓设为0。"""
-        self.signal_pos = 0
+        self.signal_pos: int = 0
 
     def on_tick(self, tick: TickData) -> None:
         """
@@ -373,11 +379,11 @@ class CtaSignal(ABC):
 
 class TargetPosTemplate(CtaTemplate):
     """按目标持仓调仓的策略模板。"""
-    tick_add = 1
+    tick_add: int = 1
 
     last_tick: TickData | None = None
     last_bar: BarData | None = None
-    target_pos = 0
+    target_pos: int = 0
 
     def __init__(
         self,
@@ -440,6 +446,7 @@ class TargetPosTemplate(CtaTemplate):
 
     def cancel_old_order(self) -> None:
         """撤销尚未请求撤销的活动委托。"""
+        vt_orderid: str
         for vt_orderid in self.active_orderids:
             if vt_orderid not in self.cancel_orderids:
                 self.cancel_order(vt_orderid)
@@ -447,7 +454,7 @@ class TargetPosTemplate(CtaTemplate):
 
     def send_new_order(self) -> None:
         """按持仓差额发单；回测用开仓，实盘先平后开，且已有活动委托时不再发单。"""
-        pos_change = self.target_pos - self.pos
+        pos_change: float = self.target_pos - self.pos
         if not pos_change:
             return
 

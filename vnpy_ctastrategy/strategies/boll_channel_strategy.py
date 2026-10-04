@@ -15,7 +15,7 @@ from vnpy_ctastrategy import (
 class BollChannelStrategy(CtaTemplate):
     """用布林通道和CCI开仓，并用ATR止损的策略。"""
 
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     boll_window: int = 18
     boll_dev: float = 3.4
@@ -33,7 +33,7 @@ class BollChannelStrategy(CtaTemplate):
     long_stop: float = 0
     short_stop: float = 0
 
-    parameters = [
+    parameters: list[str] = [
         "boll_window",
         "boll_dev",
         "cci_window",
@@ -41,7 +41,7 @@ class BollChannelStrategy(CtaTemplate):
         "sl_multiplier",
         "fixed_size"
     ]
-    variables = [
+    variables: list[str] = [
         "boll_up",
         "boll_down",
         "cci_value",
@@ -58,8 +58,8 @@ class BollChannelStrategy(CtaTemplate):
         """
         self.write_log("策略初始化")
 
-        self.bg = BarGenerator(self.on_bar, 15, self.on_15min_bar)
-        self.am = ArrayManager()
+        self.bg: BarGenerator = BarGenerator(self.on_bar, 15, self.on_15min_bar)
+        self.am: ArrayManager = ArrayManager()
 
         self.load_bar(10)
 
@@ -91,7 +91,7 @@ class BollChannelStrategy(CtaTemplate):
         """在15分钟K线上按布林通道和CCI开仓，并用ATR跟踪止损。"""
         self.cancel_all()
 
-        am = self.am
+        am: ArrayManager = self.am
         am.update_bar(bar)
         if not am.inited:
             return

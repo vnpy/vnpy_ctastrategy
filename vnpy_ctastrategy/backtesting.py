@@ -139,6 +139,7 @@ class BacktestingEngine:
         self.pricetick = pricetick
         self.start = start
 
+        exchange_str: str
         self.symbol, exchange_str = self.vt_symbol.split(".")
         self.exchange = Exchange(exchange_str)
 
@@ -233,8 +234,11 @@ class BacktestingEngine:
         total_size: int = len(self.history_data)
         batch_size: int = max(int(total_size / 10), 1)
 
+        ix: int
+        i: int
         for ix, i in enumerate(range(0, total_size, batch_size)):
             batch_data: list = self.history_data[i: i + batch_size]
+            data: BarData | TickData
             for data in batch_data:
                 try:
                     func(data)
@@ -243,7 +247,7 @@ class BacktestingEngine:
                     self.output(traceback.format_exc())
                     return
 
-            progress = min(ix / 10, 1)
+            progress: float = min(ix / 10, 1)
             progress_bar: str = "=" * (ix + 1)
             self.output(_("回放进度：{} [{:.0%}]").format(progress_bar, progress))
 
@@ -258,6 +262,7 @@ class BacktestingEngine:
             self.output(_("回测成交记录为空"))
 
         # Add trade data into daily reuslt.
+        trade: TradeData
         for trade in self.trades.values():
             if not trade.datetime:
                 continue
@@ -286,6 +291,8 @@ class BacktestingEngine:
         results: defaultdict = defaultdict(list)
 
         for daily_result in self.daily_results.values():
+            key: str
+            value: Date | float | int | list[TradeData]
             for key, value in daily_result.__dict__.items():
                 results[key].append(value)
 
@@ -376,10 +383,10 @@ class BacktestingEngine:
             end_balance = df["balance"].iloc[-1]
             max_drawdown = df["drawdown"].min()
             max_ddpercent = df["ddpercent"].min()
-            max_drawdown_end = df["drawdown"].idxmin()
+            max_drawdown_end: int | str = df["drawdown"].idxmin()
 
             if isinstance(max_drawdown_end, Date):
-                max_drawdown_start = df["balance"][:max_drawdown_end].idxmax()
+                max_drawdown_start: int | str = df["balance"][:max_drawdown_end].idxmax()
                 max_drawdown_duration = (max_drawdown_end - max_drawdown_start).days
             else:
                 max_drawdown_duration = 0
@@ -520,6 +527,8 @@ class BacktestingEngine:
         }
 
         # Filter potential error infinite value
+        key: str
+        value: str | int | float
         for key, value in statistics.items():
             if value in (np.inf, -np.inf):
                 value = 0
@@ -538,21 +547,21 @@ class BacktestingEngine:
         if df.empty:
             return
 
-        fig = make_subplots(
+        fig: go.Figure = make_subplots(
             rows=4,
             cols=1,
             subplot_titles=["Balance", "Drawdown", "Daily Pnl", "Pnl Distribution"],
             vertical_spacing=0.06
         )
 
-        balance_line = go.Scatter(
+        balance_line: go.Scatter = go.Scatter(
             x=df.index,
             y=df["balance"],
             mode="lines",
             name="Balance"
         )
 
-        drawdown_scatter = go.Scatter(
+        drawdown_scatter: go.Scatter = go.Scatter(
             x=df.index,
             y=df["drawdown"],
             fillcolor="red",
@@ -560,8 +569,8 @@ class BacktestingEngine:
             mode="lines",
             name="Drawdown"
         )
-        pnl_bar = go.Bar(y=df["net_pnl"], name="Daily Pnl")
-        pnl_histogram = go.Histogram(x=df["net_pnl"], nbinsx=100, name="Days")
+        pnl_bar: go.Bar = go.Bar(y=df["net_pnl"], name="Daily Pnl")
+        pnl_histogram: go.Histogram = go.Histogram(x=df["net_pnl"], nbinsx=100, name="Days")
 
         fig.add_trace(balance_line, row=1, col=1)
         fig.add_trace(drawdown_scatter, row=2, col=1)
@@ -591,13 +600,17 @@ class BacktestingEngine:
         )
 
         if output:
+            result: tuple[dict, float, dict]
             for result in results:
                 msg: str = _("参数：{}, 目标：{}").format(result[0], result[1])
                 self.output(msg)
 
         return results
 
-    run_optimization = run_bf_optimization
+    run_optimization: Callable[
+        ["BacktestingEngine", OptimizationSetting, bool, int | None],
+        list,
+    ] = run_bf_optimization
 
     def run_ga_optimization(
         self,
@@ -633,6 +646,7 @@ class BacktestingEngine:
         )
 
         if output:
+            result: tuple[dict, float, dict]
             for result in results:
                 msg: str = _("参数：{}, 目标：{}").format(result[0], result[1])
                 self.output(msg)
@@ -676,16 +690,17 @@ class BacktestingEngine:
         用最新 K 线或 Tick 撮合限价单。
         """
         if self.mode == BacktestingMode.BAR:
-            long_cross_price = self.bar.low_price
-            short_cross_price = self.bar.high_price
-            long_best_price = self.bar.open_price
-            short_best_price = self.bar.open_price
+            long_cross_price: float = self.bar.low_price
+            short_cross_price: float = self.bar.high_price
+            long_best_price: float = self.bar.open_price
+            short_best_price: float = self.bar.open_price
         else:
             long_cross_price = self.tick.ask_price_1
             short_cross_price = self.tick.bid_price_1
             long_best_price = long_cross_price
             short_best_price = short_cross_price
 
+        order: OrderData
         for order in list(self.active_limit_orders.values()):
             # Push order update with status "not traded" (pending).
             if order.status == Status.SUBMITTING:
@@ -720,8 +735,8 @@ class BacktestingEngine:
             self.trade_count += 1
 
             if long_cross:
-                trade_price = min(order.price, long_best_price)
-                pos_change = order.volume
+                trade_price: float = min(order.price, long_best_price)
+                pos_change: float = order.volume
             else:
                 trade_price = max(order.price, short_best_price)
                 pos_change = -order.volume
@@ -749,16 +764,17 @@ class BacktestingEngine:
         用最新 K 线或 Tick 撮合停止单。
         """
         if self.mode == BacktestingMode.BAR:
-            long_cross_price = self.bar.high_price
-            short_cross_price = self.bar.low_price
-            long_best_price = self.bar.open_price
-            short_best_price = self.bar.open_price
+            long_cross_price: float = self.bar.high_price
+            short_cross_price: float = self.bar.low_price
+            long_best_price: float = self.bar.open_price
+            short_best_price: float = self.bar.open_price
         else:
             long_cross_price = self.tick.last_price
             short_cross_price = self.tick.last_price
             long_best_price = long_cross_price
             short_best_price = short_cross_price
 
+        stop_order: StopOrder
         for stop_order in list(self.active_stop_orders.values()):
             # Check whether stop order can be triggered.
             long_cross: bool = (
@@ -795,8 +811,8 @@ class BacktestingEngine:
 
             # Create trade data.
             if long_cross:
-                trade_price = max(stop_order.price, long_best_price)
-                pos_change = order.volume
+                trade_price: float = max(stop_order.price, long_best_price)
+                pos_change: float = order.volume
             else:
                 trade_price = min(stop_order.price, short_best_price)
                 pos_change = -order.volume
@@ -843,9 +859,11 @@ class BacktestingEngine:
         """加载回测开始前的历史K线，并保存回调。"""
         self.callback = callback
 
-        init_end = self.start - INTERVAL_DELTA_MAP[interval]
-        init_start = self.start - timedelta(days=days)
+        init_end: datetime = self.start - INTERVAL_DELTA_MAP[interval]
+        init_start: datetime = self.start - timedelta(days=days)
 
+        symbol: str
+        exchange: Exchange
         symbol, exchange = extract_vt_symbol(vt_symbol)
 
         bars: list[BarData] = load_bar_data(
@@ -862,9 +880,11 @@ class BacktestingEngine:
         """加载回测开始前的历史Tick，并保存回调。"""
         self.callback = callback
 
-        init_end = self.start - timedelta(seconds=1)
-        init_start = self.start - timedelta(days=days)
+        init_end: datetime = self.start - timedelta(seconds=1)
+        init_start: datetime = self.start - timedelta(days=days)
 
+        symbol: str
+        exchange: Exchange
         symbol, exchange = extract_vt_symbol(vt_symbol)
 
         ticks: list[TickData] = load_tick_data(
@@ -981,6 +1001,7 @@ class BacktestingEngine:
         撤销全部限价单和停止单。
         """
         vt_orderids: list = list(self.active_limit_orders.keys())
+        vt_orderid: str
         for vt_orderid in vt_orderids:
             self.cancel_limit_order(strategy, vt_orderid)
 
@@ -1001,7 +1022,7 @@ class BacktestingEngine:
         """
         pass
 
-    send_email = send_notification
+    send_email: Callable[["BacktestingEngine", str, CtaTemplate | None], None] = send_notification
 
     def sync_strategy_data(self, strategy: CtaTemplate) -> None:
         """
@@ -1111,9 +1132,10 @@ class DailyResult:
         # Trading pnl is the pnl from new trade during the day
         self.trade_count = len(self.trades)
 
+        trade: TradeData
         for trade in self.trades:
             if trade.direction == Direction.LONG:
-                pos_change = trade.volume
+                pos_change: float = trade.volume
             else:
                 pos_change = -trade.volume
 

@@ -16,7 +16,7 @@ from vnpy_ctastrategy import (
 class DualThrustStrategy(CtaTemplate):
     """按前一日振幅和开盘价计算上下轨，盘中突破后开仓的策略。"""
 
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     fixed_size: int = 1
     k1: float = 0.4
@@ -31,8 +31,8 @@ class DualThrustStrategy(CtaTemplate):
     long_entered: bool = False
     short_entered: bool = False
 
-    parameters = ["k1", "k2", "fixed_size"]
-    variables = ["day_range", "long_entry", "short_entry"]
+    parameters: list[str] = ["k1", "k2", "fixed_size"]
+    variables: list[str] = ["day_range", "long_entry", "short_entry"]
 
     def on_init(self) -> None:
         """

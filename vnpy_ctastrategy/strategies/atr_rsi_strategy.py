@@ -17,7 +17,7 @@ from vnpy_ctastrategy import (
 class AtrRsiStrategy(CtaTemplate):
     """用ATR与RSI开仓，并用跟踪止损平仓的策略。"""
 
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     atr_length: int = 22
     atr_ma_length: int = 10
@@ -34,7 +34,7 @@ class AtrRsiStrategy(CtaTemplate):
     intra_trade_high: float = 0
     intra_trade_low: float = 0
 
-    parameters = [
+    parameters: list[str] = [
         "atr_length",
         "atr_ma_length",
         "rsi_length",
@@ -42,7 +42,7 @@ class AtrRsiStrategy(CtaTemplate):
         "trailing_percent",
         "fixed_size"
     ]
-    variables = [
+    variables: list[str] = [
         "atr_value",
         "atr_ma",
         "rsi_value",

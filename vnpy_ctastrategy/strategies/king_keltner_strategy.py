@@ -15,7 +15,7 @@ from vnpy_ctastrategy import (
 class KingKeltnerStrategy(CtaTemplate):
     """用肯特纳通道开仓，并用跟踪止损平仓的策略。"""
 
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     kk_length: int = 11
     kk_dev: float = 1.6
@@ -27,8 +27,8 @@ class KingKeltnerStrategy(CtaTemplate):
     intra_trade_high: float = 0
     intra_trade_low: float = 0
 
-    parameters = ["kk_length", "kk_dev", "trailing_percent", "fixed_size"]
-    variables = ["kk_up", "kk_down"]
+    parameters: list[str] = ["kk_length", "kk_dev", "trailing_percent", "fixed_size"]
+    variables: list[str] = ["kk_up", "kk_down"]
 
     def on_init(self) -> None:
         """
@@ -71,6 +71,7 @@ class KingKeltnerStrategy(CtaTemplate):
 
     def on_5min_bar(self, bar: BarData) -> None:
         """在5分钟K线上按肯特纳通道发双边停止单，或用跟踪止损平仓。"""
+        orderid: str
         for orderid in self.vt_orderids:
             self.cancel_order(orderid)
         self.vt_orderids.clear()
@@ -123,13 +124,16 @@ class KingKeltnerStrategy(CtaTemplate):
         """
         if self.pos != 0:
             if self.pos > 0:
+                short_orderid: str
                 for short_orderid in self.short_vt_orderids:
                     self.cancel_order(short_orderid)
 
             elif self.pos < 0:
+                buy_orderid: str
                 for buy_orderid in self.long_vt_orderids:
                     self.cancel_order(buy_orderid)
 
+            orderid: str
             for orderid in (self.long_vt_orderids + self.short_vt_orderids):
                 if orderid in self.vt_orderids:
                     self.vt_orderids.remove(orderid)

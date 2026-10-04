@@ -38,6 +38,8 @@ class RolloverTool(QtWidgets.QDialog):
         self.setWindowTitle(_("移仓助手"))
 
         old_symbols: list = []
+        vt_symbol: str
+        strategies: list[CtaTemplate]
         for vt_symbol, strategies in self.cta_engine.symbol_strategy_map.items():
             if strategies:
                 old_symbols.append(vt_symbol)
@@ -106,6 +108,7 @@ class RolloverTool(QtWidgets.QDialog):
 
         # Check all strategies inited (pos data loaded from disk json file) and not trading
         strategies: list = self.cta_engine.symbol_strategy_map[old_symbol]
+        strategy: CtaTemplate
         for strategy in strategies:
             if not strategy.inited:
                 self.write_log(_("策略{}尚未初始化，无法执行移仓").format(strategy.strategy_name))
@@ -177,7 +180,7 @@ class RolloverTool(QtWidgets.QDialog):
             self.cta_engine._init_strategy(strategy.strategy_name)
 
         # Save data of old strategy
-        pos = strategy.pos
+        pos: float = strategy.pos
         name: str = strategy.strategy_name
         parameters: dict = strategy.get_parameters()
 
@@ -227,7 +230,7 @@ class RolloverTool(QtWidgets.QDialog):
             return
 
         if direction == Direction.LONG:
-            price = tick.ask_price_1 + contract.pricetick * payup
+            price: float = tick.ask_price_1 + contract.pricetick * payup
         else:
             price = tick.bid_price_1 - contract.pricetick * payup
 
@@ -253,6 +256,7 @@ class RolloverTool(QtWidgets.QDialog):
             )
 
             vt_orderids: list = []
+            req: OrderRequest
             for req in req_list:
                 vt_orderid: str = self.main_engine.send_order(req, contract.gateway_name)
                 if not vt_orderid:

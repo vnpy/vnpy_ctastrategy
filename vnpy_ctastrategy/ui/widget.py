@@ -83,9 +83,9 @@ class CtaManager(QtWidgets.QWidget):
             self.main_engine, self.event_engine
         )
 
-        self.strategy_combo = QtWidgets.QComboBox()
+        self.strategy_combo: QtWidgets.QComboBox = QtWidgets.QComboBox()
         self.strategy_combo.setMinimumWidth(200)
-        find_button = QtWidgets.QPushButton(_("查找"))
+        find_button: QtWidgets.QPushButton = QtWidgets.QPushButton(_("查找"))
         find_button.clicked.connect(self.find_strategy)
 
         # Set layout
@@ -115,13 +115,13 @@ class CtaManager(QtWidgets.QWidget):
 
     def update_class_combo(self) -> None:
         """把已加载策略类名填入下拉框。"""
-        names = self.cta_engine.get_all_strategy_class_names()
+        names: list[str] = self.cta_engine.get_all_strategy_class_names()
         names.sort()
         self.class_combo.addItems(names)
 
     def update_strategy_combo(self) -> None:
         """用当前策略名刷新查找下拉框。"""
-        names = list(self.managers.keys())
+        names: list[str] = list(self.managers.keys())
         names.sort()
 
         self.strategy_combo.clear()
@@ -139,7 +139,7 @@ class CtaManager(QtWidgets.QWidget):
         """
         Update strategy status onto its monitor.
         """
-        data = event.data
+        data: dict = event.data
         strategy_name: str = data["strategy_name"]
 
         if strategy_name in self.managers:
@@ -180,9 +180,9 @@ class CtaManager(QtWidgets.QWidget):
 
     def find_strategy(self) -> None:
         """把选中的策略滚到可见区域。"""
-        strategy_name = self.strategy_combo.currentText()
+        strategy_name: str = self.strategy_combo.currentText()
         if strategy_name:
-            manager = self.managers[strategy_name]
+            manager: StrategyManager = self.managers[strategy_name]
             self.scroll_area.ensureWidgetVisible(manager)
 
     def clear_log(self) -> None:
@@ -356,8 +356,10 @@ class DataMonitor(QtWidgets.QTableWidget):
         self.verticalHeader().setVisible(False)
         self.setEditTriggers(self.EditTrigger.NoEditTriggers)
 
+        column: int
+        name: str
         for column, name in enumerate(self._data.keys()):
-            value = self._data[name]
+            value: object = self._data[name]
 
             cell: QtWidgets.QTableWidgetItem = QtWidgets.QTableWidgetItem(str(value))
             cell.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -367,6 +369,8 @@ class DataMonitor(QtWidgets.QTableWidget):
 
     def update_data(self, data: dict) -> None:
         """按字段名更新单元格文本。"""
+        name: str
+        value: object
         for name, value in data.items():
             cell: QtWidgets.QTableWidgetItem = self.cells[name]
             cell.setText(str(value))
@@ -471,6 +475,8 @@ class SettingEditor(QtWidgets.QDialog):
             button_text = _("确定")
             parameters = self.parameters
 
+        name: str
+        value: bool | int | float | str
         for name, value in parameters.items():
             type_: type = type(value)
 
@@ -508,13 +514,17 @@ class SettingEditor(QtWidgets.QDialog):
         if self.class_name:
             setting["class_name"] = self.class_name
 
+        name: str
+        tp: tuple[QtWidgets.QLineEdit, type]
         for name, tp in self.edits.items():
+            edit: QtWidgets.QLineEdit
+            type_: type
             edit, type_ = tp
-            value_text = edit.text()
+            value_text: str = edit.text()
 
             if type_ is bool:
                 if value_text == "True":
-                    value = True
+                    value: bool | int | float | str = True
                 else:
                     value = False
             else:

@@ -156,6 +156,7 @@ class CtaEngine(BaseEngine):
 
         self.check_stop_order(tick)
 
+        strategy: CtaTemplate
         for strategy in strategies:
             if strategy.inited:
                 self.call_strategy_func(strategy, strategy.on_tick, tick)
@@ -221,14 +222,15 @@ class CtaEngine(BaseEngine):
 
     def check_stop_order(self, tick: TickData) -> None:
         """用最新价触发本地停止单，触发后发送限价单。"""
+        stop_order: StopOrder
         for stop_order in list(self.stop_orders.values()):
             if stop_order.vt_symbol != tick.vt_symbol:
                 continue
 
-            long_triggered = (
+            long_triggered: bool = (
                 stop_order.direction == Direction.LONG and tick.last_price >= stop_order.price
             )
-            short_triggered = (
+            short_triggered: bool = (
                 stop_order.direction == Direction.SHORT and tick.last_price <= stop_order.price
             )
 
@@ -240,7 +242,7 @@ class CtaEngine(BaseEngine):
                 # use ask_price_5 or bid_price_5
                 if stop_order.direction == Direction.LONG:
                     if tick.limit_up:
-                        price = tick.limit_up
+                        price: float = tick.limit_up
                     else:
                         price = tick.ask_price_5
                 else:
@@ -320,6 +322,7 @@ class CtaEngine(BaseEngine):
         # Send Orders
         vt_orderids: list = []
 
+        req: OrderRequest
         for req in req_list:
             vt_orderid: str = self.main_engine.send_order(req, contract.gateway_name)
 
@@ -514,6 +517,7 @@ class CtaEngine(BaseEngine):
         if not vt_orderids:
             return
 
+        vt_orderid: str
         for vt_orderid in copy(vt_orderids):
             self.cancel_order(strategy, vt_orderid)
 
@@ -552,6 +556,8 @@ class CtaEngine(BaseEngine):
         use_database: bool
     ) -> list[BarData]:
         """加载指定天数的历史K线；use_database为真时只查数据库，否则先查接口或数据服务，没有数据再查数据库。"""
+        symbol: str
+        exchange: Exchange
         symbol, exchange = extract_vt_symbol(vt_symbol)
         end: datetime = datetime.now(DB_TZ)
         start: datetime = end - timedelta(days)
@@ -594,6 +600,8 @@ class CtaEngine(BaseEngine):
         callback: Callable[[TickData], None]
     ) -> list[TickData]:
         """从数据库加载指定天数的历史Tick。"""
+        symbol: str
+        exchange: Exchange
         symbol, exchange = extract_vt_symbol(vt_symbol)
         end: datetime = datetime.now(DB_TZ)
         start: datetime = end - timedelta(days)
@@ -644,6 +652,7 @@ class CtaEngine(BaseEngine):
             self.write_log(_("创建策略失败，本地代码缺失交易所后缀"))
             return
 
+        exchange_str: str
         __, exchange_str = vt_symbol.split(".")
         if exchange_str not in Exchange.__members__:
             self.write_log(_("创建策略失败，本地代码的交易所后缀不正确"))
@@ -685,8 +694,9 @@ class CtaEngine(BaseEngine):
         # Restore strategy data(variables)
         data: dict | None = self.strategy_data.get(strategy_name, None)
         if data:
+            name: str
             for name in strategy.variables:
-                value = data.get(name, None)
+                value: object | None = data.get(name, None)
                 if value is not None:
                     setattr(strategy, name, value)
 
@@ -776,6 +786,7 @@ class CtaEngine(BaseEngine):
             vt_orderids: set = self.strategy_orderid_map.pop(strategy_name)
 
             # Remove vt_orderid strategy map
+            vt_orderid: str
             for vt_orderid in vt_orderids:
                 if vt_orderid in self.orderid_strategy_map:
                     self.orderid_strategy_map.pop(vt_orderid)
@@ -800,10 +811,12 @@ class CtaEngine(BaseEngine):
         """
         从指定目录加载策略类。
         """
+        suffix: str
         for suffix in ["py", "pyd", "so"]:
             pathname: str = str(path.joinpath(f"*.{suffix}"))
+            filepath: str
             for filepath in glob(pathname):
-                filename = Path(filepath).stem
+                filename: str = Path(filepath).stem
                 name: str = f"{module_name}.{filename}"
                 self.load_strategy_class_from_module(name)
 
@@ -817,8 +830,9 @@ class CtaEngine(BaseEngine):
             # 重载模块，确保如果策略文件中有任何修改，能够立即生效。
             importlib.reload(module)
 
+            name: str
             for name in dir(module):
-                value = getattr(module, name)
+                value: object = getattr(module, name)
                 if (
                     isinstance(value, type)
                     and issubclass(value, CtaTemplate)
@@ -859,6 +873,7 @@ class CtaEngine(BaseEngine):
         strategy_class: type[CtaTemplate] = self.classes[class_name]
 
         parameters: dict = {}
+        name: str
         for name in strategy_class.parameters:
             parameters[name] = getattr(strategy_class, name)
 
@@ -874,17 +889,20 @@ class CtaEngine(BaseEngine):
     def init_all_strategies(self) -> dict[str, Future]:
         """提交全部策略的初始化任务。"""
         futures: dict[str, Future] = {}
+        strategy_name: str
         for strategy_name in self.strategies.keys():
             futures[strategy_name] = self.init_strategy(strategy_name)
         return futures
 
     def start_all_strategies(self) -> None:
         """启动全部策略。"""
+        strategy_name: str
         for strategy_name in self.strategies.keys():
             self.start_strategy(strategy_name)
 
     def stop_all_strategies(self) -> None:
         """停止全部策略。"""
+        strategy_name: str
         for strategy_name in self.strategies.keys():
             self.stop_strategy(strategy_name)
 
@@ -894,6 +912,8 @@ class CtaEngine(BaseEngine):
         """
         self.strategy_setting = load_json(self.setting_filename)
 
+        strategy_name: str
+        strategy_config: dict
         for strategy_name, strategy_config in self.strategy_setting.items():
             self.add_strategy(
                 strategy_config["class_name"],

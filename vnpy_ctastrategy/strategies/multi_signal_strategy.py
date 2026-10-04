@@ -136,7 +136,7 @@ class MaSignal(CtaSignal):
 class MultiSignalStrategy(TargetPosTemplate):
     """把RSI、CCI和均线信号相加后调整目标持仓。"""
 
-    author = "用Python的交易员"
+    author: str = "用Python的交易员"
 
     rsi_window: int = 14
     rsi_level: int = 20
@@ -145,7 +145,7 @@ class MultiSignalStrategy(TargetPosTemplate):
     fast_window: int = 5
     slow_window: int = 20
 
-    parameters = ["rsi_window", "rsi_level", "cci_window",
+    parameters: list[str] = ["rsi_window", "rsi_level", "cci_window",
                   "cci_level", "fast_window", "slow_window"]
 
     def on_init(self) -> None:
@@ -209,6 +209,7 @@ class MultiSignalStrategy(TargetPosTemplate):
         self.signal_pos["ma"] = self.ma_signal.get_signal_pos()
 
         target_pos: int = 0
+        v: int
         for v in self.signal_pos.values():
             target_pos += v
 
