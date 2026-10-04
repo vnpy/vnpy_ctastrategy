@@ -430,12 +430,13 @@ class BacktestingEngine:
                 stability_return = 0
 
             returns_series: Series = df["return"]
-            downside_diff: np.ndarray = np.minimum(returns_series.values, 0.0)
+            return_values: np.ndarray = cast(np.ndarray, returns_series.values)
+            downside_diff: np.ndarray = np.minimum(return_values, 0.0)
             downside_std: float = np.sqrt(np.mean(downside_diff ** 2))
             annual_downside_risk: float = downside_std * np.sqrt(252)
             return_skew: float = cast(float, returns_series.skew())
             return_kurt: float = cast(float, returns_series.kurt())
-            sorted_returns: np.ndarray = np.sort(returns_series.values)
+            sorted_returns: np.ndarray = np.sort(return_values)
             cutoff_index: int = int(np.ceil(len(sorted_returns) * 0.05))
             cvar_95: float = np.mean(sorted_returns[:cutoff_index])
 
