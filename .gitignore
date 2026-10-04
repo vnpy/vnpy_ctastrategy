@@ -126,3 +126,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Type checker / linter / test caches
+.ruff_cache/
