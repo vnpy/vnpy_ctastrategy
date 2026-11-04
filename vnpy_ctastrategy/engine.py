@@ -727,8 +727,8 @@ class CtaEngine(BaseEngine):
             self.write_log(_("{}已经启动，请勿重复操作").format(strategy_name))
             return
 
-        self.call_strategy_func(strategy, strategy.on_start)
         strategy.trading = True
+        self.call_strategy_func(strategy, strategy.on_start)
 
         self.put_strategy_event(strategy)
 

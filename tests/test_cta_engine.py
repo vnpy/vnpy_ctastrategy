@@ -330,3 +330,74 @@ class TestCtaEngineOrders:
         )
         assert vt_orderids == []
         assert rig.gateway.order_requests == []
+
+
+class StartHookStrategy(CtaTemplate):
+    def __init__(
+        self,
+        cta_engine: object,
+        strategy_name: str,
+        vt_symbol: str,
+        setting: dict,
+    ) -> None:
+        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
+        self.trading_in_start: bool | None = None
+        self.orderids_in_start: list[str] = []
+
+    def on_init(self) -> None:
+        pass
+
+    def on_start(self) -> None:
+        self.trading_in_start = self.trading
+        self.orderids_in_start = self.buy(3500, 1)
+
+    def on_stop(self) -> None:
+        pass
+
+
+class FailingStartStrategy(CtaTemplate):
+    def on_init(self) -> None:
+        pass
+
+    def on_start(self) -> None:
+        raise RuntimeError("boom")
+
+    def on_stop(self) -> None:
+        pass
+
+
+class TestCtaEngineStartHook:
+    def test_on_start_runs_in_trading_state(self, rig: EngineRig) -> None:
+        engine: CtaEngine = rig.engine
+        engine.classes[StartHookStrategy.__name__] = StartHookStrategy
+        engine.add_strategy(
+            StartHookStrategy.__name__,
+            "hook",
+            rig.contract.vt_symbol,
+            {},
+        )
+        strategy: StartHookStrategy = cast(StartHookStrategy, engine.strategies["hook"])
+        engine._init_strategy("hook")
+
+        engine.start_strategy("hook")
+
+        assert strategy.trading_in_start is True
+        assert strategy.orderids_in_start == ["FAKE.1"]
+        assert len(rig.gateway.order_requests) == 1
+
+    def test_on_start_exception_still_disables_trading(self, rig: EngineRig) -> None:
+        engine: CtaEngine = rig.engine
+        engine.classes[FailingStartStrategy.__name__] = FailingStartStrategy
+        engine.add_strategy(
+            FailingStartStrategy.__name__,
+            "boom",
+            rig.contract.vt_symbol,
+            {},
+        )
+        strategy: CtaTemplate = engine.strategies["boom"]
+        engine._init_strategy("boom")
+
+        engine.start_strategy("boom")
+
+        assert strategy.trading is False
+        assert strategy.inited is False
